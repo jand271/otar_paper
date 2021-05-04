@@ -1,0 +1,80 @@
+\documentclass[letterpaper,times]{IONconf/IONconf}
+
+\title{On SBAS Authentication with Over-the-air Rekeying Schemes}
+
+
+\author{
+    Jason~Anderson, Todd~Walter, Sherman Lo, \textit{Stanford~University}% <- this '%' removes a trailing whitespace
+    }
+
+\begin{document}
+
+\maketitle
+
+{\bf Section Choice 1:} GNSS AUTHENTICATION AND ANTI-SPOOFING
+
+{\bf Section Choice 2:} GNSS VULNERABILITIES AND ANTI-JAMMING
+
+{\bf Section Choice 3:} GNSS AUGMENTATION SYSTEMS AND INTEGRITY
+
+
+\section*{Abstract}
+
+In this work, we delineate a complete a complete Satellite-Based Augmentation Systems (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backwards compatibility, data efficiency, and quick time to authenticated first fix.
+Moreover, it is expandable to additional stake-holder feedback.
+This work addresses the full authentication scheme design, including receiver hardware requirements, key updates and scheme maintenance, and uses a full-stack Monte-Carlo SBAS simulation to test and evaluate the schemes performance.
+Moreover, this work also address the time-synchronization and receiver hardware requirements to deter replay attacks.
+
+Satellite-Based Augmentation Systems (the several international systems together, ``SBASs''), such as the United States' Wide-Area Augmentation System (``WAAS'') among other international equivalents, have become an integral to the Global Navigation Satellite System (``GNSS'') for civilian aviation use.
+International parties that choose to implement an SBAS (each a ``Provider'') use listening stations throughout their jurisdiction to assess GNSS satellite positioning data and then broadcast those assessments widely via geostationary satellites.
+This information includes wide-area GNSS differential corrections and GNSS satellite health and integrity.
+Like GNSS core-constellation signals, the SBAS signal is open and susceptible to spoofing, and with its ubiquitous use in civilian aviation, SBAS should be augmented with spoofing resistant capabilities to ensure continued civilian aviation safety.
+The Providers agree to share a common SBAS message standard.
+This work pertains to how the SBAS message standard could be augmented to provide an authenticated service resistant to spoofing.
+
+SBAS is primarily a data service.
+It broadcasts data that assists GNSS users.
+Naturally, appending cryptographic data to the SBAS data serves as the best way to authenticate the SBAS data.
+This would require that SBAS broadcast messages that deliver cryptographic signatures and key values to users.
+Using the mathematical primitives underlying cryptographic authentication methods, users will assert that only the Provider could have generated the SBAS data and the accompanying authenticating ciphertext.
+The authentication security assumes that (1) the Provider exclusively holds certain secret information and (2) no efficient algorithms exist that break the cryptographic authentication methods.
+Using cryptographic authentication methods poses certain challenges.
+
+The main challenge is delivering the ciphertext via SBAS, given the data-bandwidth constraints.
+SBAS must use an asymmetric cryptographic algorithm to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
+Wherever we specify ECDSA, one could use another asymmetric cryptographic algorithm; however, we will specify ECDSA without loss of generality for concreteness.
+To meet a standard 128-bit security level, a single signature requires 512-bit, which dwarfs the maximum allowable SBAS data bits per message at 216 bits.
+Prior art has suggested using the Quadrature (``Q'') channel to deliver the ciphertext \cite{other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
+Using the Q-channel would strain the availability and continuity of SBAS systems at coverage area boundaries, which is undesirable to SBAS stakeholders.
+Prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation}.
+TESLA uses a delayed-release mechanism to authenticated date with less ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
+SBAS cannot exclusively use TESLA; TESLA must be used in tandem with ECDSA to achieve authenticated security.
+The relationship between the proposed TESLA-ECDSA scheme can be described as follows: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's TESLA use as periodic {\em maintenance}.
+The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely left the maintenance and requirements thereof unaddressed, such as how best to OTAR.
+This work address the main challenge by suggesting a more efficient authentication maintenance scheme without use of the Q channel.
+
+Prior art suggested appending a single message type (``MT'') to SBAS \cite{Neish_Dissertation}.
+It suggests that SBAS send this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and leaves 26-bits for the scheme's maintenance.
+While the scheme requires a steep MT delivery frequency, it does not overburden the SBAS MT schedule.
+In this work, we modify prior art by appending another MT to SBAS to replace the 26-bits mentioned above.
+We design our proposed additional MT to be modular with the exclusive purpose of delivering all ciphertext related to the scheme's maintenance.
+This design allows for reasonable time-to-first-authenticated-fix requirements, it scales well with increases to the ECDSA security level, and it is flexible and future-proof to anticipated feedback from the Providers and SBAS stakeholders.
+It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it scales well with security level increases and is flexible and future proof to anticipated feedback from the Providers and SBAS stakeholders and any required cryptographic primitive changes upon cryptographic primitive breakage.
+
+To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called MatLab Algorithm Availability Simulation Tool (``MAAST'')\cite{MAAST}.
+MAAST has been used to evaluate SBAS design before and provides Monte-Carlo simulation results to evaluate how our design performs under message loss over the WAAS coverage area.
+With the tool, we show that our proposed design outperforms Key Performance Indicators (each a ``KPI''), such as time to first authenticated fix, time to authentication per message, and robustness to message loss.
+For the KPI regarding the time of authenticated first fix, we show about a 50\% reduction. 
+
+With TESLA's use, the Provider and any users must be loosely time-synchronized, poses an interesting Catch-22 situation since GNSS provides the time.
+Therefore, our scheme must also describe its resistance to a Replay Attack.
+A Replay Attack is where a spoofer listens and then replays messages at a slightly delayed rate.
+After some time, the spoofer-induced time delay allows the spoofer to violate the loosely-time synchronized assumption and break the TESLA scheme.
+Prior art has described how a receiver on-board clock could be used to detect such an attack, given clock uncertainty \cite{time_sync_paper}.
+This work extends this work by specifying the on-board clock accuracy requirements to meet our scheme's security level, and we find those requirements reasonable for receivers.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
+
