@@ -43,29 +43,32 @@ It broadcasts data that assists GNSS users.
 Naturally, appending cryptographic data to the SBAS data serves as the best way to authenticate the SBAS data for civil users.
 This would require that SBAS broadcast messages that deliver cryptographic signatures and key values to users.
 Using the mathematical primitives underlying cryptographic authentication methods, users would assert that only the Provider could have generated the SBAS data and the accompanying authenticating ciphertext.
-The authentication security assumes that (1) the Provider exclusively holds certain secret information and (2) no efficient algorithms exist that break the cryptographic authentication methods.
-Using cryptographic authentication methods poses certain challenges.
+In this work, we call the authenticating data "signatures", and signatures, together with the associated key data, ``authenticating ciphertext''.
+We call this data authenticating ciphertext not because it contains a cipher, but because the data is psuedorandom and not human-readable.
+The security of the authenticating ciphertext assumes that (1) the Provider exclusively holds certain identifying information secret and (2) no efficient algorithms exist that can generate the authenticating ciphertext without the identifying information held secret.
+If such an efficient algorithm exists, the scheme is called broken.
 
+Using cryptographic authentication methods poses certain challenges.
 The main challenge is delivering the ciphertext via SBAS, given the data-bandwidth constraints.
-SBAS must use an asymmetric cryptographic algorithm to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
-Wherever we specify ECDSA, one could use another asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness.
-To meet a standard 128-bit security level, a single signature requires 512-bit, which dwarfs the maximum allowable SBAS data bits per message at 216 bits.
-Prior art has suggested using the Quadrature (``Q'') channel to deliver the ciphertext \cite{other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
+SBAS authentication security must rely on asymmetric cryptographic algorithm to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
+Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness.
+To meet a standard 128-bit security level, a single signature requires 512-bits, which dwarfs the maximum allowable SBAS data bits per message at 216 bits.
+Prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating ciphertext \cite{other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
 Using the Q-channel would strain the availability and continuity of SBAS systems at coverage area boundaries, which is undesirable to SBAS stakeholders.
 Prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation} since it provides more efficient use of ciphertext and is loss tolerant.
-TESLA uses a delayed-release mechanism to authenticated data with less ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
-SBAS cannot exclusively use TESLA; TESLA must be used in tandem with ECDSA to achieve authenticated security.
-The relationship between the proposed TESLA-ECDSA scheme can be described as follows: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's TESLA use as periodic {\em maintenance}.
-The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely left the maintenance and requirements thereof unaddressed, such as how best to OTAR.
+TESLA uses a delayed-release mechanism to authenticated data with less authenticating ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
+SBAS cannot exclusively use TESLA; TESLA must be used in tandem with ECDSA to achieve authentication security.
+The relationship between the proposed TESLA-ECDSA scheme can be described as follows: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's use of TESLA as periodic {\em maintenance}.
+The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to OTAR.
 This work addresses the main challenge by suggesting a more efficient authentication maintenance scheme without using the Q channel.
 
 Prior art suggested appending a single message type (``MT'') to SBAS for authentication and its maintenance\cite{Neish_Dissertation}.
-It suggests that SBAS sends this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and leaves 26-bits for the scheme's maintenance.
+It suggests that SBAS sends this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and 26-bits for the scheme's maintenance.
 While the scheme requires a steep authentication-message delivery frequency, it does not overburden the SBAS MT schedule.
 In this work, we modify prior art by appending another MT to SBAS to replace the 26-bits mentioned above dedicated for maintenance.
-We design our proposed additional MT to be modular with the exclusive purpose of delivering all ciphertext related to the scheme's maintenance.
-This design allows for reasonable time-to-first-authenticated-fix requirements, it scales well with increases to the ECDSA security level, and it is flexible and future-proof to anticipated feedback from the Providers and SBAS stakeholders.
-It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it scales well with security level increases and is flexible and future proof to anticipated feedback from the Providers and SBAS stakeholders and any required cryptographic primitive changes upon cryptographic primitive breakage.
+We design our proposed additional MT to be modular with the exclusive purpose of delivering all authentication ciphertext related to the scheme's maintenance.
+This design allows for reasonable time-to-first-authenticated-fix requirements.
+It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it requires no changes in the event of cryptographic primitive breakage, it scales well with increases to the security level requirements and is flexible and future-proof to anticipated feedback from the Providers and SBAS stakeholders.
 
 To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called MatLab Algorithm Availability Simulation Tool (``MAAST'')\cite{MAAST}.
 MAAST has been used to evaluate SBAS design before and provides Monte-Carlo simulation results to evaluate how our design performs under message loss over the WAAS coverage area.
@@ -81,16 +84,16 @@ This work extends this work by specifying the on-board clock accuracy requiremen
 
 \subsection{ECDSA}
 ECDSA is a standardized asymmetric authentication protocol.
-The protocol specifies a signature function and a verification function.
-The Provider generates a secure random $n$-bit integer for long-term use as a secret private key.
-The Provider then derives a $2n$-bit integer from the private key for the receiver as a public key.
-Since the protocol is secure, there is no {\em known} efficient algorithm that can compute the private key given the public key.
+The protocol specifies a signing function and a verifying function.
+Let $n$ be the security level of an instance of the protocol, which linearly describes the required computation to {\em exhaustively} break the instance.
+The Provider generates a secure random $2n$-bit integer for long-term use as a secret private key.
+The Provider then derives a $2n$-bit integer from the private key and distributes to receivers as a public key.
+The Provider uses the signing function, with the secret private key, to derive signatures on messages.
+Each signature is a $4n$-bit integer.
+Receivers use the verifying function, with the public key and signatures, to assert that the holder of the private key generated the message and signature.
+Since the protocol is secure, there is no {\em known} efficient algorithm that can compute the private key given the public key nor compute the signature on a message.
 By efficient algorithm, we mean any algorithm that is faster than exhaustive search on the total n-bit key space.
-The Provider uses the signature function to compute a message's signature with the secret private key and shares the message and signature with the receiver.
-The signature is a $4n$-bit integer.
-The receiver uses the verification function with the public key to assert that the private key holder generated the message and signature.
-Since the protocol is secure, there is no {\em known} efficient algorithm that can derive a public key's message signature without the associated private key.
-The protocol assumes that the receiver trusts the public key as from the Provider.
+The protocol assumes that the receiver trusts the public key as from the provider.
 The protocol is not loss-tolerant: if a single bit of a signature or message is lost, the protocol will fail to verify.
 
 \subsection{TESLA} \label{sec: TESLA intro}
@@ -116,32 +119,33 @@ We restrict the Hash Function domain to be equivalent to its range: the set of 1
 Since the audience of this work are experts in navigation, we use geometric terms {\em path} and {\em point} instead of {\em key chains} and {\em key} and describe TESLA with the geometry of a {\em one-way path}.
 Let each 128-bit integer be called a Hash Point, and let a collection of Hash Points {\em consecutively} related via the Hash Function be a Hash Path.
 Hash Points further along the Hash Path -not consecutive- are related by repeated application of the Hash Function.
-Since the Hash Function is cryptographically secure, there is no {\em known} efficient algorithm that can compute the input Hash Point (also called the ``preimage'') to the Hash Function that yields a specific output Hash Point.
-In other words, it is trivially easy to compute the output Hash Point of the Hash Function given an input Hash Point preimage, but one can only use exhaustive search to compute the input Hash Point preimage that corresponds to an output Hash Point.
-It is a one-way path.
+Since the Hash Function is cryptographically secure, there is no {\em known} efficient algorithm that can compute the input Hash Point to the Hash Function that yields a specific output Hash Point.
+Herein, we call that input Hash Point the preimage Hash Point of that output Hash Point.
+In other words, it is trivially easy to compute the output Hash Point of the Hash Function given the preimage Hash Point, but one can only use exhaustive search to find any preimage Hash Point.
+It is a {\em one-way} path.
 The domain of 128-bit integers, together with a randomized 128-bit salt inclusion to the Hash Function, make precomputation attacks (also called Rainbow Table Attacks) infeasible with modern supercomputers.
 
 To use a Hash Path to authenticate messages via TESLA, Provider computes a Hash Path derived from a {\em random} starting Hash Point and holds that Hash Path secret.
-The Provider broadcasts the last Hash Point along the Hash Path (the "Hash Path End") together with an ECDSA signature.
+The Provider broadcasts the last Hash Point along the Hash Path (herein, the "Hash Path End") together with an ECDSA signature.
 Receivers assert the Hash Path End as authenticated with the ECDSA signature.
-Provider uses the secret preimage Hash Point to the Hash Path End as a key to send authentication signatures along with the standard message set.
+Provider uses the secret preimage Hash Point to the Hash Path End as a key to send symmetric authentication signatures along with the standard message set.
 We propose using keyed-hash message authentication codes that use the Hash Function as its primitive as the signatures (the function, ``HMAC'', and the HMAC signatures themselves, ``HMACs''). 
 We will continue to describe the protocol concretely using our selection without loss of generality.
 Providers and receivers agree on schedule where Provider will (1) stop using the preimage Hash Point of the Hash Path End to authenticate messages, (2) broadcast that preimage Hash Point for receivers to authenticate messages, and (3) use the next preimage Hash Point along the Hash Path to authenticate new messages.
 Once a particular preimage Hash Point is broadcast, receivers cannot accept new signatures received derived therefrom.
 Since the HMACs were received when a specific preimage Hash Point was known only to the Provider, the messages must have been generated by the Provider.
-Each time the Provider release a Hash Point, the provider moves backward one Hash Point along its secret Hash Path to generate new HMACs.
+Each time Providers release a Hash Point, Provider moves backward one Hash Point along its secret Hash Path to generate new HMACs.
 
 The authentication security along the Hash Path hinges on (1) the security of the Hash Function and (2) that the Provider and receiver are loosely time-synchronized.
 Since the Hash Point is known only to the Provider when the HMACs were computed, only the Provider could have generated those messages.
-The Provider releases that key the known schedule provided by the loosely-time-synchronized assumption, and the Provider notes that only messages received with the correct signature {\em before} that key release can be authenticated.
+Provider releases Hash Points on the known schedule provided by the loosely-time-synchronized assumption, and Provider notes that only messages received with the correct signature {\em before} that release can be authenticated.
 Given the Hash Function's security, the Hash Point along the Hash Path before the released Hash Point is still secret, and so it becomes the new HMAC key for the next set of messages.
 
 To complete the authenticating security, TESLA must be used in tandem with an asymmetric authentication protocol.
 TESLA is secure along the Hash Path length; however, Hash Paths are finite and must be generated periodically.
 An asymmetric authentication protocol must sign the Hash Path End, the first Hash Point known to the receiver.
 In other words, for every Hash Path generated by the Provider, the Provider must use an asymmetric signature to ensure authentication security along the entire Hash Path.
-Moreover, the Provider and receiver must be loosely time-synchronized, which poses a significant Catch-22 problem since GNSS and SBAS Providers provide the time.
+Moreover, Provider and receiver must be loosely time-synchronized, which poses a Catch-22 problem since GNSS and SBAS Providers provide the time.
 This provokes the question of why use TESLA at all and not just use only an asymmetric protocol.
 Later in this work, we will show that using TESLA has better loss-tolerant properties and requires less ciphertext, and the time-synchronization problem can be accounted for.
 
@@ -155,7 +159,8 @@ Section \ref{sec: methodology} provides explanations and reasoning for our propo
 While the definitions presenter here are for the L5 signal, given the spare bits remaining in each definition, this scheme will also work for the L1 signal by modifying the preambles.
 
 \subsection{ECDSA Key Structure} \label{sec: ECDSA Key Structure}
-We propose a two-level ECDSA key structure.
+
+We propose a two-level ECDSA key structure, as suggested \cite{Neish_Dissertation}.
 
 Level-1 keys will be 256-bit ECDSA keys managed by the  International Civil Aviation Organization (``ICAO'').
 Each level-1 key will be in use for 100 weeks.
@@ -174,7 +179,7 @@ The Provider will then distribute that public key and the associated authenticat
 As the receiver receives a new level-2 public key and authenticating signature, it will verify the received new level-2 public key with the associated decrypted level-1 public key.
 
 The Provider will use its level-2 keys to authenticate TESLA Hash Path Ends, and keys derived from the TESLA Hash Paths will be used to authenticate the bulk of SBAS messages.
-For all levels, the ciphertext delivered will accompany data (e.g., SBAS message preamble, MT, other data) that must be sent per the definitions below.
+For all levels, the authenticating ciphertext delivered will accompany data (e.g., SBAS message preamble, MT, other data) that must be sent per the definitions below.
 A particular signature must derive from the entire SBAS message(s) used to deliver that particular key.
 Concretely, for example, when a level-1 key authenticates a level-2 key, the level-1 signature must derive from the entire set of messages used to deliver the level-2 key and the accompanying key expiration time. 
 In other words, the level-1 signature must derive from the complete messages containing overhead data, not just the level-2 key itself.
