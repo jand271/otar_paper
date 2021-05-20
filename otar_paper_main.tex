@@ -307,7 +307,8 @@ These messages do not have to be sent on a rigid schedule and can be sent in the
 	& & 2 - Spare \\ 
 	& & 3 - Spare \\ \hline
 	Cipher text Page Number & 4 & The Ordered Section of Germane cipher text - max 16 with 4 bits\\ \hline
-	Spare & 14 & Additional features possible discussed in Section \ref{sec: MT51 modularity} \\ \hline
+	Parity Bit & 1 & Parity bit for a compressed public key \\ \hline
+	Spare & 13 & Additional features possible discussed in Section \ref{sec: MT51 modularity} \\ \hline
 	Sum Total & 88 & \\ \hline
 \end{tabular}
 \caption{Bit allocation of ciphertext metadata. To distinguish the key updated with a specific MT51 and the key used to authenticate that MT51, we call the key associated with the MT51-delivered ciphertext the Germane Key and the key used to authenticate that delivered key the Authenticating Key.}
@@ -452,6 +453,12 @@ Since each broadcast of an MT51 is accompanied with an germane expiration time, 
 Furthermore, MT51 could manage other authentication schemes, such as an authentication scheme adopted by GNSS.
 A GNSS authentication, especially one built on TESLA, would save bandwidth by deferring the GNSS scheme's maintenance to SBAS.
 If these features are not desired, one could add redundant HMACS to the MT51 message to redundantly authenticate messages for the event of an MT50 loss.
+
+\subsubsection{Fountain Codes}
+
+The previous section discussed a breadth of options for the meta data; however, depending on the Provider's preferences on which features to incorporate into the meta data, there will be spare bits.
+In the minimum case, where the Provider does not allow parallel key management and fixed expiration times, there could be around 64 spare bits of meta data.
+Whatever the case may be, we suggest using the spare bits for Fountain Codes to (1) increase the reliability of delivering MT51 messages and (2) decrease the number of transmitted messages required for an authenticated first fix.
 
 \subsection{MT51 Schedule Frequency} \label{sec: MT51 Freq}
 
