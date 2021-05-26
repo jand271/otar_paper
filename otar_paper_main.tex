@@ -28,8 +28,7 @@ We also suggest that this scheme would be useful broadly to any bandwidth-limite
 
 In this work, we delineate a complete Satellite-Based Augmentation System (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backward compatibility, data efficiency, and quick time to authenticated first fix.
 Moreover, it is expandable to additional stakeholder feedback.
-This work addresses the full authentication scheme design, including receiver hardware requirements, key updates, and scheme maintenance, and uses a full-stack Monte-Carlo SBAS simulation to test and evaluate the scheme's performance.
-Moreover, this work also addresses the time-synchronization and receiver hardware requirements to deter replay attacks.
+This work addresses the full authentication scheme design, including connecting receiver hardware requirements to maintenance schedules, key updates, and scheme maintenance, and uses a full-stack Monte-Carlo SBAS simulation to test and evaluate the scheme's performance.
 
 Satellite-Based Augmentation Systems (the several international systems together, ``SBASs''), such as the United States' Wide-Area Augmentation System (``WAAS'') among other international equivalents, have become integral to the Global Navigation Satellite System (``GNSS'') for civilian aviation use.
 International parties that choose to implement an SBAS (each a ``Provider'') use listening stations around their service volume to assess GNSS satellite positioning data and then broadcast those assessments widely via geostationary satellites.
@@ -40,23 +39,24 @@ This work pertains to how the SBAS message standard could be augmented to provid
 
 SBAS is primarily a data service.
 It broadcasts data that assists GNSS users.
-Naturally, appending cryptographic data to the SBAS data serves as the best way to authenticate the SBAS data for civil users.
+Therefore, appending additional cryptographic data to the SBAS data serves as a natural way to authenticate the SBAS data for civil users.
 This would require that SBAS broadcast messages that deliver cryptographic signatures and key values to users.
 Using the mathematical primitives underlying cryptographic authentication methods, users would assert that only the Provider could have generated the SBAS data and the accompanying authenticating ciphertext.
 In this work, we call the authenticating data "signatures", and signatures, together with the associated key data, ``authenticating ciphertext''.
 We call this data authenticating ciphertext not because it contains a cipher, but because the data is psuedorandom and not human-readable.
-The security of the authenticating ciphertext assumes that (1) the Provider exclusively holds certain identifying information secret and (2) no efficient algorithms exist that can generate the authenticating ciphertext without the identifying information held secret.
-If such an efficient algorithm exists, the scheme is called broken.
+The security of the authenticating ciphertext assumes that (1) Provider exclusively holds certain identifying information secret and (2) there exist no {\em known} efficient algorithms that can generate the authenticating ciphertext without the identifying information held secret.
+If the identifying information (e.g., keys) is leaked, that information is called compromised and must be revoked.
+If an efficient algorithm is discovered, the scheme is called broken and the associated mathematical primitives must be replaced.
 
-Using cryptographic authentication methods poses certain challenges.
+Using cryptographic authentication methods poses certain challenges to SBAS.
 The main challenge is delivering the ciphertext via SBAS, given the data-bandwidth constraints.
 SBAS authentication security must rely on asymmetric cryptographic algorithm to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
-Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness.
+Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness noting that certain parameters and characteristic security strengths listed here would be different if not using ECDSA.
 To meet a standard 128-bit security level, a single signature requires 512-bits, which dwarfs the maximum allowable SBAS data bits per message at 216 bits.
 Prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating ciphertext \cite{other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
 Using the Q-channel would strain the availability and continuity of SBAS systems at coverage area boundaries, which is undesirable to SBAS stakeholders.
 Prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation} since it provides more efficient use of ciphertext and is loss tolerant.
-TESLA uses a delayed-release mechanism to authenticated data with less authenticating ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
+TESLA uses a delayed-release mechanism to authenticate data with less authenticating ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
 SBAS cannot exclusively use TESLA; TESLA must be used in tandem with ECDSA to achieve authentication security.
 The relationship between the proposed TESLA-ECDSA scheme can be described as follows: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's use of TESLA as periodic {\em maintenance}.
 The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to OTAR.
@@ -68,31 +68,31 @@ While the scheme requires a steep authentication-message delivery frequency, it 
 In this work, we modify prior art by appending another MT to SBAS to replace the 26-bits mentioned above dedicated for maintenance.
 We design our proposed additional MT to be modular with the exclusive purpose of delivering all authentication ciphertext related to the scheme's maintenance.
 This design allows for reasonable time-to-first-authenticated-fix requirements.
-It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it requires no changes in the event of cryptographic primitive breakage, it scales well with increases to the security level requirements and is flexible and future-proof to anticipated feedback from the Providers and SBAS stakeholders.
+It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it requires no changes in the event of cryptographic primitive breakage.
+Moreover, it scales well with increases to the security level requirements and is flexible and future-proof to anticipated feedback from the Providers and SBAS stakeholders.
 
-To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called MatLab Algorithm Availability Simulation Tool (``MAAST'')\cite{MAAST}.
+To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called Matlab Algorithm Availability Simulation Tool (``MAAST'')\cite{MAAST}.
 MAAST has been used to evaluate SBAS design before and provides Monte-Carlo simulation results to evaluate how our design performs under message loss over the WAAS coverage area.
 With the tool, we show that our proposed design outperforms Key Performance Indicators (each a ``KPI''), such as time to first authenticated fix, time to authentication per message, and robustness to message loss.
-For the KPI regarding the time of authenticated first fix, we show about a 50\% reduction. 
 
 With TESLA's use, the Provider and any users must be loosely time-synchronized, which poses an interesting Catch-22 situation since GNSS provides the time.
 Therefore, our scheme must also describe its resistance to a Replay Attack.
 A Replay Attack is where a spoofer listens and then replays messages at a slightly delayed rate.
 After some time, the spoofer-induced time delay allows the spoofer to violate the loosely-time synchronized assumption and break the TESLA scheme.
 Prior art has described how a receiver on-board clock could be used to detect such an attack, given clock uncertainty \cite{time_sync_paper}.
-This work extends this work by specifying the on-board clock accuracy requirements to meet our scheme's security level, and we find those requirements reasonable for receivers.
+This work extends this work by specifying the on-board clock accuracy requirements and maintenance schedules to meet our scheme's security level, and we find those requirements reasonable for SBAS receivers.
 
 \subsection{ECDSA}
 ECDSA is a standardized asymmetric authentication protocol.
 The protocol specifies a signing function and a verifying function.
 Let $n$ be the security level of an instance of the protocol, which linearly describes the required computation to {\em exhaustively} break the instance.
 The Provider generates a secure random $2n$-bit integer for long-term use as a secret private key.
-The Provider then derives a $2n$-bit integer from the private key and distributes to receivers as a public key.
+The Provider then derives a $2n$-bit integer from the private key and distributes to receivers as the public key.
 The Provider uses the signing function, with the secret private key, to derive signatures on messages.
 Each signature is a $4n$-bit integer.
 Receivers use the verifying function, with the public key and signatures, to assert that the holder of the private key generated the message and signature.
 Since the protocol is secure, there is no {\em known} efficient algorithm that can compute the private key given the public key nor compute the signature on a message.
-By efficient algorithm, we mean any algorithm that is faster than exhaustive search on the total n-bit key space.
+By efficient algorithm, we mean any algorithm that is faster than exhaustive search on the total 2n-bit private key space.
 The protocol assumes that the receiver trusts the public key as from the provider.
 The protocol is not loss-tolerant: if a single bit of a signature or message is lost, the protocol will fail to verify.
 
@@ -119,14 +119,14 @@ We restrict the Hash Function domain to be equivalent to its range: the set of 1
 Since the audience of this work are experts in navigation, we use geometric terms {\em path} and {\em point} instead of {\em key chains} and {\em key} and describe TESLA with the geometry of a {\em one-way path}.
 Let each 128-bit integer be called a Hash Point, and let a collection of Hash Points {\em consecutively} related via the Hash Function be a Hash Path.
 Hash Points further along the Hash Path -not consecutive- are related by repeated application of the Hash Function.
-Since the Hash Function is cryptographically secure, there is no {\em known} efficient algorithm that can compute the input Hash Point to the Hash Function that yields a specific output Hash Point.
+Since the Hash Function is secure, there is no {\em known} efficient algorithm that can compute the input Hash Point to the Hash Function that yields a specific output Hash Point.
 Herein, we call that input Hash Point the preimage Hash Point of that output Hash Point.
 In other words, it is trivially easy to compute the output Hash Point of the Hash Function given the preimage Hash Point, but one can only use exhaustive search to find any preimage Hash Point.
 It is a {\em one-way} path.
-The domain of 128-bit integers, together with a randomized 128-bit salt inclusion to the Hash Function, make precomputation attacks (also called Rainbow Table Attacks) infeasible with modern supercomputers.
+The domain of 128-bit integers, together with a randomized 128-bit salt inclusion to the Hash Function, make precomputation attacks (also called Rainbow Table Attacks) infeasible with modern supercomputers because it meets 128-bit security.
 
 To use a Hash Path to authenticate messages via TESLA, Provider computes a Hash Path derived from a {\em random} starting Hash Point and holds that Hash Path secret.
-The Provider broadcasts the last Hash Point along the Hash Path (herein, the "Hash Path End") together with an ECDSA signature.
+The Provider broadcasts the last Hash Point along the Hash Path (herein, the "Hash Path End") together with an ECDSA signature derived therefrom.
 Receivers assert the Hash Path End as authenticated with the ECDSA signature.
 Provider uses the secret preimage Hash Point to the Hash Path End as a key to send symmetric authentication signatures along with the standard message set.
 We propose using keyed-hash message authentication codes that use the Hash Function as its primitive as the signatures (the function, ``HMAC'', and the HMAC signatures themselves, ``HMACs''). 
@@ -134,7 +134,7 @@ We will continue to describe the protocol concretely using our selection without
 Providers and receivers agree on schedule where Provider will (1) stop using the preimage Hash Point of the Hash Path End to authenticate messages, (2) broadcast that preimage Hash Point for receivers to authenticate messages, and (3) use the next preimage Hash Point along the Hash Path to authenticate new messages.
 Once a particular preimage Hash Point is broadcast, receivers cannot accept new signatures received derived therefrom.
 Since the HMACs were received when a specific preimage Hash Point was known only to the Provider, the messages must have been generated by the Provider.
-Each time Providers release a Hash Point, Provider moves backward one Hash Point along its secret Hash Path to generate new HMACs.
+Each time Providers release a Hash Point, Provider moves backward one Hash Point along its secret Hash Path to derive new HMACs.
 
 The authentication security along the Hash Path hinges on (1) the security of the Hash Function and (2) that the Provider and receiver are loosely time-synchronized.
 Since the Hash Point is known only to the Provider when the HMACs were computed, only the Provider could have generated those messages.
@@ -178,7 +178,7 @@ The Provider will submit the new public key to ICAO for a signature from ICAO's 
 The Provider will then distribute that public key and the associated authenticating signature over SBAS.
 As the receiver receives a new level-2 public key and authenticating signature, it will verify the received new level-2 public key with the associated decrypted level-1 public key.
 
-The Provider will use its level-2 keys to authenticate TESLA Hash Path Ends, and keys derived from the TESLA Hash Paths will be used to authenticate the bulk of SBAS messages.
+The Provider will use its level-2 keys to authenticate TESLA Hash Path Ends, and keys derived from the TESLA Hash Paths will be used to authenticate the bulk of SBAS messages with HMACS.
 For all levels, the authenticating ciphertext delivered will accompany data (e.g., SBAS message preamble, MT, other data) that must be sent per the definitions below.
 A particular signature must derive from the entire SBAS message(s) used to deliver that particular key.
 Concretely, for example, when a level-1 key authenticates a level-2 key, the level-1 signature must derive from the entire set of messages used to deliver the level-2 key and the accompanying key expiration time. 
@@ -188,7 +188,7 @@ In other words, the level-1 signature must derive from the complete messages con
 
 Each TESLA Hash Path will be used over 1 week.
 The Provider will generate an entire Hash Path before its actual use and then broadcast the Hash Path End, signed by the current level-2 ECDSA key.
-Each Hash Point, except the Hash Path End, will be associated with five keys that will authenticate five messages with HMAC.
+Each Hash Point, except the Hash Path End, will be associated with at least five keys that will authenticate at least five messages with HMAC.
 Therefore, a Hash Path will include 100801 Hash Points: one for each sixth second for the week and then the Hash Path End.
 
 To generate a Hash Path $P$, the Provider will derive a secure random 128-bit salt $S^P$ from level-2 ECDSA authentication, as described in Section \ref{sec: salt}.
@@ -200,9 +200,10 @@ p^P_{i+1} = \textrm{H} \left(p^P_i \oplus S^P \oplus (t_i \oslash 6) \right)
 \end{equation}
 The purpose of the integer division is explained in Section \ref{sec: alert salt}.
 We propose a 16-bit truncated signature from HMAC authenticates each message.
-The key $k_j$ for each message $m_j$ will be according to Equation \ref{eq: key}, and the signature $s_j$ thereof will be according to Equation \eqref{eq: signature}.
+The key $k_j$ for each message $m_j$ will be according to Equation \ref{eq: key}, and the signature $s_j$ derived therefrom will be according to Equation \eqref{eq: signature}.
 $t_j$ is the integer time of the authenticated messages broadcast and receipt.
-We discuss the necessity of the xor operations of Equation \eqref{eq: key} in Section \ref{sec: time and keys}.
+PRN is the psuedorandom code associated with the broadcasting geostationary satellite.
+We discuss the necessity of the xor operations of Equation \eqref{eq: key} in Section \ref{sec: HMAC security}.
 \begin{align} 
 k_j &= p^P_i \oplus t_j \oplus \textrm{PRN} \label{eq: key} \\
 s_j &= \textrm{HMAC}(k_j, m_j) \label{eq: signature}
@@ -242,7 +243,7 @@ The Provider will send an MT50 at a cadence of every six messages.
 With the delayed key release to authenticate messages means that messages will be authenticated between 6 and 11 seconds after their broadcast.
 Provider will also time integrity messages to be immediately before an MT50 to minimize the length of time after integrity messages are authenticated.
 If the receiver is not able to authenticate a message, it disregards that message.
-Each MT50 will authenticate the previous five messages using HMAC and the Hash Points sent at the {\em following} MT50 according to Equation \eqref{eq: hash path} along the current precomputed Hash Path.
+Each MT50 will authenticate the previous five messages using HMAC and the Hash Points sent in {\em proceeding} MT50 according to Equation \eqref{eq: hash path} along the current precomputed Hash Path.
 Within the message definition, there are five 16-bit HMACs and one 128-bit Hash Point.
 At the receiver receipt of an MT50, the included five HMACs correspond the previous messages with a secret key Hash Point known only to the Provider.
 The included 128-bit Hash Point corresponds to the HMACS included in the {\em previous} MT50 message sent 6 seconds earlier.
@@ -360,10 +361,10 @@ Section \ref{sec: MT51 modularity} discusses why 128 was selected to aid in the 
 The selection of 16-bit HMAC lengths follows our general strategy of 2-bit lengths, which aids the flexibility of the scheme, as discussed in Section \ref{sec: MT51 modularity}.
 The TESLA protocol presents two germane advantages relevant for adoption by SBAS: ciphertext efficiency and loss tolerance.
 
-Regarding ciphertext efficiency, the overhead required to OTAR a Hash Path does not increase with Hash Path length.
+Regarding authenticating ciphertext efficiency, the overhead required to OTAR a Hash Path does not increase with Hash Path length.
 To OTAR a TESLA Hash Path, the Provider sends a Hash Path End authenticated with ECDSA.
 While a complete OTAR requires a daunting 2048 bits, see Section \ref{sec: MT51 modularity}, the bits do not scale with Hash Path length.
-If Provider finds the overhead required to OTAR a Hash Path too burdensome on the schedule, Provider can double the Hash Path's length to halve Hash Path OTAR's frequency.
+If Provider finds the overhead required to OTAR a Hash Path too burdensome on the schedule, Provider can double the Hash Path's length and halve Hash Path OTAR's frequency.
 Increasing the Hash Path length requires the Provider to compute a longer Hash Path per OTAR, but this burden is negligible as commodity hardware can compute Hash Paths on the lengths specified in this work in seconds.
 At a 128-bit Hash Point length, a Hash Path length on the order of decades is safe from attack \cite{Neish_Dissertation}.
 
@@ -374,7 +375,7 @@ Suppose a receiver misses several day's worths of Hash Points; upon receipt of a
 This property scales along the length of the Hash Path.
 If a receiver is off longer than the Hash Path's length or applicability, it will need to OTAR the Hash Path End via MT51 and ECDSA.
 Each MT50 transmits five HMACS that each separately authenticates a message, rather than a single HMAC that authenticates the five messages together.
-This ensures that if a single message is lost, the other four messages' authentication remains unaffected; however, the short 16-bit HMAC length relies on a short time between authentication.
+This ensures that if a single message is lost, the other four messages' authentication remains unaffected; however, the short 16-bit HMAC length relies on a short time between authentication: in our case, 6-11 seconds.
 
 Our selection of SHA-256 is not necessarily required.
 We select SHA-256 because it is standard and widely used.
@@ -406,15 +407,16 @@ Our selection for a single geostationary SBAS satellite time of first fix is dis
 \subsection{MT51 Modularity} \label{sec: MT51 modularity}
 
 The proposed design of MT51 is fundamentally {\em modular}.
-The design of MT51 serves only to deliver ciphertext so that its use can be flexible and recycled among different OTAR designs and applications that require delivery of psuedorandom data such as keys, signatures, and Hash Points. 
-Its purpose is to deliver large chunks of ciphertext to maintain the SBAS authentication scheme and the associated metadata on how the receiver should interpret that ciphertext.
+The design of MT51 serves only to deliver pseudorandom data so that its use can be flexible and recycled among different OTAR designs and applications that require delivery of psuedorandom data such as keys, signatures, and Hash Points. 
+Its purpose is to deliver large chunks of psuedorandom data to maintain the SBAS authentication scheme and the associated metadata on how the receiver should interpret that ciphertext.
 The same message definition delivers TESLA Hash Path Ends, level-2 keys, level-1-key decryption keys, and the authenticating ciphertext required to authenticate each.
 
 Our choice to allow 128-bits per MT51 serves several purposes.
-We select 128 and 256-bit security level ECDSA keys since NIST provides standardized, secure elliptic curves of those security levels.
+We select 128 and 256-bit security level ECDSA keys there exist standardized, secure elliptic curves those at those security levels, and they are each divisible by 128.
 The public keys and derived signatures are twice and four times the security level length, respectively.
 These quantities are divisible by 128, meaning that there will be integer numbers of ciphertext pages, and no wasted zero padding will be used to distribute keys.
 Table \ref{tab: ciphertext lengths} shows have many messages are required to OTAR each of the key levels.
+Our selection could be modified to use the 192-bit level without modifying out scheme, since all of the 192-bit level data is also divisible by 128.
 \begin{table}[H]
 \center
 \begin{tabular}{|c|c|c|c|c|} \hline
@@ -455,15 +457,17 @@ MT51 messages could authenticate specific messages, identified by 16-bit hashes,
 If keys are ever compromised, MT51 could also disseminate key revocations.
 A revocation MT51 would include eight 16-bit hashes of the affected keys and would only need to be broadcast until the keys are retired under standard procedure.
 Since each broadcast of an MT51 is accompanied with an germane expiration time, Provider can arbitrarily shorten the applicability of a particular key by rebroadcasting the MT51 with a different expiration time, noting the assumption that receivers actually receive that updated broadcast and that the Hash Path salt may be disrupted since a particular nonce cannot be used more than once, see Section \ref{sec: salt}. 
+If Provider can resigns data, the metadata must include a parameter that identifies that particular authentication.
+This is because without the germane key hash, authenticating key hash, page number, and authentication instance number, each page of data cannot be associated with each other because they are pseudorandom.
 Furthermore, MT51 could manage other authentication schemes, such as an authentication scheme adopted by GNSS.
 A GNSS authentication, especially one built on TESLA, would save bandwidth by deferring the GNSS scheme's maintenance to SBAS.
-If these features are not desired, one could add redundant HMACS to the MT51 message to redundantly authenticate messages for the event of an MT50 loss.
 
-\subsubsection{Fountain Codes}
-
-The previous section discussed a breadth of options for the meta data; however, depending on the Provider's preferences on which features to incorporate into the meta data, there will be spare bits.
-In the minimum case, where the Provider does not allow parallel key management and fixed expiration times, there could be around 64 spare bits of meta data.
-Whatever the case may be, we suggest using the spare bits for Fountain Codes to (1) increase the reliability of delivering MT51 messages and (2) decrease the number of transmitted messages required for an authenticated first fix.
+There are many features that can be accommodated by the scheme's modularity; however, if SBAS stakeholders do not want any of these features, then the spare meta bits could also be used to aid in resistance to message loss.
+Providers could add redundant HMACS to the MT51 message to redundantly authenticate messages for the event of an MT50 loss.
+Moreover, the delivery of 128-bits of authenticating ciphertext could be augmented with fountain codes.
+Fountain Codes(1) increase the reliability of delivering MT51 messages and (2) decrease the number of transmitted messages required for an authenticated first fix.
+The selection of 128-bits aids in the schemes efficiency since all the data is integrally divisible by 128.
+Special care can ensure that using fountain codes in the spare bits to augment those 128-bits would not change the integrally divisible property and maintain efficiency.
 
 \subsection{MT51 Schedule Frequency} \label{sec: MT51 Freq}
 
@@ -474,10 +478,11 @@ Therefore, Authentication Stack must be sent periodically over their use.
 From Table \ref{tab: ciphertext lengths}, a complete Authentication Stack requires 16 MT51s. 
 We propose that the current Authentication Stack be transmitted by Provider every 5 minutes so that a cold-start receiver achieves the first authenticated fix in 5 minutes, assuming no message loss.
 This requirement would require that a message from the set of 16 unique MT51s be transmitted 1 out of every 18 messages, rounded up.
+With multiple geostationary satellites, the satellites can broadcast the unique MT51s out of phase to decrease the authenticated first fix time.
 
-Furthermore, the next keys, applicable immediately upon expiration of the current keys but be sent well before their actual use for a seamless transition as keys expire.
+Furthermore, the next keys, applicable immediately upon expiration of the current keys must be sent well before their actual use for a seamless transition as keys expire.
 To protect a specific new key's security, it would be prudent to only send that new key just before use.
-For instance, we suggest the Provider send the next 100-week level-1 key repeatedly beginning five weeks before its actual use, send the next 10-week level-2 and 1-week TESLA Hash Path End 1 week before its actual use.
+For instance, we suggest the Provider send the next 100-week level-1 key repeatedly beginning five weeks before its actual use and send the next 10-week level-2 and 1-week TESLA Hash Path End 1 week before its actual use.
 To show how little this consideration affects the MT51 SBAS bandwidth, if a Provider sent the next Authentication Stack once every hour, together with the current Authentication Stack once every 5 minutes, the Provider would need to send a message from the set of 32 unique MT51s 1 out of every 17 messages, rounded up.
 
 We note that is it not actually required that Provider and receivers stick to a set schedule for the key periods nor the Hash Paths.
@@ -563,7 +568,7 @@ If authenticated messages are occasionally sent after their agreed schedule, the
 \subsection{Use of Time in Hash Path} \label{sec: time and keys}
 
 The TESLA protocol assumes that Provider and receiver are loosely time-synchronized.
-To break the TESLA protocol's security, an attacker must hack the receiver time so that its time is 6 seconds behind the Provider time.
+To break the TESLA protocol's security, an attacker must hack the receiver time so that its time is 6 seconds behind Provider time.
 In the above formulations, we proposed including the times $t_i$ and $t_j$ in the TESLA counter and Hash Point to key derivations.
 As proposed, if Provider and the receiver are not time-synchronized within 1-second, the authentication scheme fails to certify messages as authenticated since all the keys derive from the integer time in seconds.
 This helps make SBAS message spoofing more complex by requiring that any SBAS spoofer also spoof the GNSS time.
