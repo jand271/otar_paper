@@ -412,7 +412,7 @@ Its purpose is to deliver large chunks of psuedorandom data to maintain the SBAS
 The same message definition delivers TESLA Hash Path Ends, level-2 keys, level-1-key decryption keys, and the authenticating ciphertext required to authenticate each.
 
 Our choice to allow 128-bits per MT51 serves several purposes.
-We select 128 and 256-bit security level ECDSA keys there exist standardized, secure elliptic curves those at those security levels, and they are each divisible by 128.
+We select 128 and 256-bit security level ECDSA keys since there exist standardized, secure elliptic curves at those security levels, and they are each divisible by 128.
 The public keys and derived signatures are twice and four times the security level length, respectively.
 These quantities are divisible by 128, meaning that there will be integer numbers of ciphertext pages, and no wasted zero padding will be used to distribute keys.
 Table \ref{tab: ciphertext lengths} shows have many messages are required to OTAR each of the key levels.
