@@ -537,7 +537,7 @@ Using a nonce more than once reveals the secret key used to authenticate the dat
 This means, that the Hash Path and its authentication signatures are immutable.
 Provider cannot resign a Hash Point mid Hash Path to save receivers the computation of hashing down to the signed Hash Path End because the salt derived therefrom would be different.
 Providers cannot change any of the meta data (e.g., the expiration time) either.
-To reincorporate these two features, Provider could use spare metadata from MT51 to distribute the salt instead.
+To reincorporate these two features, as mentioned above, Provider could use distribute the salt as a separate MT51.
 
 \subsection{Loss Tolerant TESLA Counter} \label{sec: alert salt}
 
