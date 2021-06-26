@@ -500,7 +500,7 @@ If stakeholders elect not to have a rigid Hash Path schedule, a maximum Hash Pat
 
 The selection of the level-1 cryptoperiod, level-2 cryptoperiod, and Hash Path length pose trade-offs among SBAS stakeholders.
 With a very long Hash Path, aircraft are less likely to be in a state where they do not have the current Hash Path End via MT51, since the Hash Path End expires less often.
-Upon startup after a shutdown less than the Hash Path End Cryptoperiod, (1) receivers not need to await delivery of an updated Authentication Stack via MT51, and (2) receivers will have to accommodate a more intense preliminary hashing operation at startup to hash the current MT50 Hash Point to the authenticated Hash Path End.
+Upon startup after a shutdown less than the Hash Path End Cryptoperiod, (1) receivers need not await delivery of an updated Authentication Stack via MT51, and (2) receivers must accommodate a more intense startup hashing operation to hash the current MT50 Hash Point to the authenticated Hash Path End.
 With a very short Hash Path (e.g., a Hath Path cryptoperiod of 1 day), after a receiver shutdown, receivers will more likely be in a state of missing part of the Authentication Stack since those missing parts expired while the receiver was shutdown, but the shorter Hash Path will mean less hash processing at startup.
 These considerations become especially germane for aircraft that traverse different SBAS service volumes periodically.
 For instance, consider aircraft that make transatlantic regularly, which when outside a specific service volume, behave as a shutdown receiver.
