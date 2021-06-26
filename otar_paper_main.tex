@@ -189,7 +189,7 @@ If this does not happen, then the accompanying data, especially the key expirati
 
 Each TESLA Hash Path will be used over 1 week.
 Provider will generate an entire Hash Path before its actual use and then broadcast the Hash Path End, signed by the current level-2 ECDSA key.
-Each Hash Point, except the Hash Path End, will be associated with at least five keys that will authenticate at least five messages with HMAC.
+Each Hash Point, except the Hash Path End, will be associated with at least five keys that will authenticate at least five messages with HMAC, depending on the number of iterations of Equation \ref{eq: key}.
 Therefore, a Hash Path will include 100801 Hash Points: one for each sixth second for the week and then the Hash Path End.
 
 To generate a Hash Path $P$, Provider will derive a secure random 128-bit salt $S^P$ from level-2 ECDSA authentication, as described in Section \ref{sec: salt}.
@@ -277,7 +277,7 @@ This is explained in Section \ref{sec: alert salt}.
 \begin{figure}
 \centering
 \includegraphics[width=0.5\linewidth]{fig/alertschedule.png}
-\caption{Conceptual diagram of how the salting scheme accommodates perturbations to the MT50 schedule. In the diagram, m means a standard message and I means an integrity message. Integrity messages that would be sent on a nominal schedule are marked blue, and extra integrity messages during an alert are marked yellow. Note that $T \oslash 6$ does not change in the event of an alert message MT50 delay, so the Hash Path is preserved. BEAUTIFY ME SO I LOOK LIKE I DIDNT COME FROM EXCEL}
+\caption{Conceptual diagram of how the salting scheme accommodates perturbations to the MT50 schedule. In the diagram, m means a standard message and I means an integrity message. Integrity messages that would be sent on a nominal schedule are marked blue, and extra integrity messages during an alert are marked yellow. Note that $T \oslash 6$ does not change in the event of an alert message MT50 delay, so the Hash Path is preserved.}
 \label{fig: alert schedule}
 \end{figure}
 
@@ -342,12 +342,14 @@ After expiration of a particular key, receivers must reject messages signed with
 
 Upon a receiver startup, a receiver must check that it has a complete set of current, unexpired Level-1 ECDSA public key, Level-2 ECDSA public key, TESLA Hash Path End, and the associated authenticating ciphertext signatures thereof (together, the ``Authentication Stack'').
 Without receiving and verifying the entire set of unique MT51s to complete receipt of the Authentication Stack, the receiver cannot assert an authenticated fix, and must ignore the SBAS data derived from the incoming messages.
-The Receiver must listen and store MT51 messages until the aggregate authenticating ciphertext contained therefrom produces a successful ECDSA authentication of the entire Authentication Stack: level-1 key onto level-2 key and level-2 key onto the Hash Path End.
+In a cold start scenario where the receiver does not have a complete Authentication Stack, the receiver must listen and store MT51 messages until the aggregate authenticating ciphertext contained therefrom produces a successful ECDSA authentication of the entire Authentication Stack: level-1 key onto level-2 key and level-2 key onto the Hash Path End.
+From the ECDSA-authenticated Authentication Stack, teh receiver can then go back and authenticated all other messages via the MT50-distributed Hash Path and HMACS.
 Provider repeatedly broadcasts the current Authentication Stack, see Section \ref{sec: MT51 Freq}, to accommodate receivers starting from cold start.
 Upon complete receipt of the Authentication Stack, receivers will have to hash the current Hash Point from the recent MT50 to the MT51-provided Hash Path End.
 The worst case number of hash computations is the length of the Hash Path and will occur when a receiver turns on near the expiration of the Hash Path.
-With receiver standard hardware (e.g., INSERT PROCESSOR HERE), a worst case time of [TIME] happens if the receiver is turned on immediately before a Hash Path expires, which is negligible.
-We measured this time by having that processor hash 100,000 times.
+With standard commodity hardware (e.g., Intel Core i5 Processor), a worst case time of about 10 seconds happens if the receiver is turned on immediately before a Hash Path expires, see section \ref{sec: experiment}.
+With hardware acceleration, this process time could decrease and be parallelized with other standard receiver processes.
+We measured this time by experimenting with personal laptops that were not specifically built for this process.
 In the special case where the receiver has only been off a short time, moving offline and back online during the use of the same Hash Path, the receiver time-of-first-authenticated is just the time required to hash to the Hash Path End.
 
 \section{Methodology} \label{sec: methodology}
@@ -361,7 +363,7 @@ Increasing these lengths adds additional security-level padding.
 The primary reason for 128 Hash Point lengths is that MT51, as specified, has space for 128 bits.
 Section \ref{sec: MT51 modularity} discusses why 128 was selected to aid in the scheme's maintenance.
 The selection of 16-bit HMAC lengths follows our general strategy of 2-bit lengths, which aids the flexibility of the scheme, as discussed in Section \ref{sec: MT51 modularity}.
-The TESLA protocol presents two germane advantages relevant for adoption by SBAS: ciphertext efficiency and loss tolerance.
+The TESLA protocol presents two germane advantages relevant for adoption by SBAS: authenticating ciphertext efficiency and loss tolerance.
 
 Regarding authenticating ciphertext efficiency, the overhead required to OTAR a Hash Path does not increase with Hash Path length.
 To OTAR a TESLA Hash Path, Provider sends a Hash Path End authenticated with ECDSA.
@@ -378,7 +380,7 @@ Suppose a receiver misses several day's worths of Hash Points; upon receipt of a
 This property scales along the length of the Hash Path.
 If a receiver is off longer than the Hash Path's length or applicability, it will need to OTAR the Hash Path End via MT51 and ECDSA.
 Each MT50 transmits five HMACS that each separately authenticates a message, rather than a single HMAC that authenticates the five messages together.
-This ensures that if a single message is lost, the other four messages' authentication remains unaffected; however, the short 16-bit HMAC length relies on a short time between authentication: in our case, 6-11 seconds.
+This ensures that if a single message is lost, the other four messages' authentication remains unaffected; however, the short 16-bit HMAC length relies on the delayed-key release schedule and a short time between authentication: in our case, 6-11 seconds.
 
 Our selection of SHA-256 for the Hash Path and MAC generation is not necessarily required.
 We select SHA-256 because it is standard and widely used.
@@ -404,7 +406,7 @@ Without making the HMAC key a function of the broadcasting satellite, upon recei
 Once again, any bit change among the keys derived from one Hash Point is sufficient; however, we specify the satellite PRN code for convenience and universal applicability among the SBASs and since they are necessarily unique for each satellite.
 While Providers could maintain separate Hash Paths for each satellite, this feature could be used to decrease the time of receipt of the Authentication Stack for cold start receivers.
 For instance, WAAS uses three geostationary satellites.
-WAAS could use the same Hash Path for of its satellite, and broadcast the set of unique messages that make up the Authentication Stack out of phase, decreasing the time-of-first-authenticated-fix by 66.6\%, while accommodating receivers that do not track each satellite.
+WAAS could use the same Hash Path for all of its satellite, and broadcast the set of unique messages that make up the Authentication Stack out of phase, decreasing the time-of-first-authenticated-fix by 66.6\%, while accommodating receivers that do not track each satellite.
 Our selection for a single geostationary SBAS satellite time of first fix is discussed in Section \ref{sec: MT51 Freq}.
 
 \subsection{MT51 Modularity} \label{sec: MT51 modularity}
@@ -495,6 +497,15 @@ Each Hash Point is a hash, and hashes have constant-time look-up computational c
 This means if Provider were to switch Hash Paths without warning, receiver would need only one additional computation to check that the new Hash Point is the preimage to another ECDSA-verified Hash Path End.
 This means that SBAS could incorporate unscheduled or stochastic Hash Path switches, provided the appropriate MT51s are sent in advance noting that the MT51s only specify Hash Path End expirations and not their actual use time.
 If stakeholders elect not to have a rigid Hash Path schedule, a maximum Hash Path length upper bound must be specified so that receivers do not get stuck in an infinite hashing loop attempting to hash back down to an ECDSA-authenticated Hash Path End.
+
+The selection of the level-1 cryptoperiod, level-2 cryptoperiod, and Hash Path length pose trade-offs among SBAS stakeholders.
+With a very long Hash Path, aircraft are less likely to be in a state where they do not have the current Hash Path End via MT51, since the Hash Path End expires less often.
+Upon startup after a shutdown less than the Hash Path End Cryptoperiod, (1) receivers not need to await delivery of an updated Authentication Stack via MT51, and (2) receivers will have to accommodate a more intense preliminary hashing operation at startup to hash the current MT50 Hash Point to the authenticated Hash Path End.
+With a very short Hash Path (e.g., a Hath Path cryptoperiod of 1 day), after a receiver shutdown, receivers will more likely be in a state of missing part of the Authentication Stack since those missing parts expired while the receiver was shutdown, but the shorter Hash Path will mean less hash processing at startup.
+These considerations become especially germane for aircraft that traverse different SBAS service volumes periodically.
+For instance, consider aircraft that make transatlantic regularly, which when outside a specific service volume, behave as a shutdown receiver.
+Our selection from Section \ref{sec: MT51 Freq} was to accommodate a short time of first fix.
+With a longer the Hash Path, as transatlantic flight cross service volumes, the more likely the time of first fix will be bounded by receiver computational hash capability, instead of being bounded by MT51 delivery schedule. 
 
 \subsection{TESLA Hash Path Salt} \label{sec: salt}
 
@@ -589,7 +600,7 @@ This increases the time-between authentication by a few seconds; however, it dou
 
 \pagebreak
 
-\section{Full Stack Simulation and KPIs}
+\section{Full Stack Simulation and KPIs} \label{sec: experiment}
 
 \begin{itemize}
 	\item Discuss methodology of monte-carlo simulation
