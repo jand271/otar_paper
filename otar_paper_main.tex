@@ -469,7 +469,7 @@ A GNSS authentication, especially one built on TESLA, would save bandwidth by de
 
 There are many features that can be accommodated by the scheme's modularity; however, if SBAS stakeholders do not want any of these features, then the spare meta bits could also be used to aid in resistance to message loss.
 Providers could add redundant HMACS to the MT51 message to redundantly authenticate messages for the event of an MT50 loss.
-Moreover, the delivery of 128-bits of authenticating ciphertext could be augmented with fountain codes.
+Moreover, the delivery of 128-bits of authenticating ciphertext could be augmented with fountain codes \cite{gnss_fountain_codes}.
 Fountain Codes(1) increase the reliability of delivering MT51 messages and (2) decrease the number of transmitted messages required for an authenticated first fix.
 The selection of 128-bits aids in the schemes efficiency since all the data is integrally divisible by 128.
 Special care can ensure that using fountain codes in the spare bits to augment those 128-bits would not change the integrally divisible property and maintain efficiency.
