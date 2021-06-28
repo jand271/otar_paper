@@ -51,14 +51,22 @@ The main challenge is delivering the ciphertext via SBAS, given the data-bandwid
 SBAS authentication security must rely on asymmetric cryptographic algorithms to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
 Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness, noting that certain parameters and characteristic security strengths listed here would be different if not using ECDSA.
 To meet a standard 128-bit security level, a single signature requires 512-bits, which dwarfs the maximum allowable SBAS data bits per message at 216 bits.
-Prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating ciphertext \cite{other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
+Prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating ciphertext \cite{todd-pki-scheme,other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
 Using the Q-channel would strain the availability and continuity of SBAS systems at coverage area boundaries, which is undesirable to SBAS stakeholders.
-Prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation} since it provides more efficient use of ciphertext and is loss tolerant.
+Prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation, gal-os-tesla} since it provides more efficient use of ciphertext and is loss tolerant.
 TESLA uses a delayed-release mechanism to authenticate data with less authenticating ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
 SBAS cannot exclusively use TESLA; TESLA must be used in tandem with ECDSA to achieve authentication security.
 The relationship between the proposed TESLA-ECDSA scheme can be described as follows: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's use of TESLA as periodic {\em maintenance}.
 The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to OTAR.
 This work addresses the main challenge by suggesting a more efficient authentication maintenance scheme without using the Q channel.
+Moreover, this work leverages prior art to build specific features to the TESLA scheme to assert security \cite{chain-security}.
+
+Another challenge lies with receiver computational considerations.
+Prior art has explored how TESLA and ECDSA computations would fare with use in the GNSS, SBAS, and smartphone context \cite{tesla-cpus}.
+TESLA often requires a more intense, one-time startup hashing computation upon receiver start and minimal hashing operations during standard operation.
+ECDSA, when used in tandem with TESLA, requires an intense verification operation periodically, but orders of magnitude less often than the TESLA hashing requirements.
+We note that modern commodity electrons perform these operations often and often include hardware-specific acceleration in their chips to increase computational efficiency and allow parallelism.
+Therefore, we expect that if these methods burden current receivers, receivers manufacturers could augment those chip improvements at a minimal cost.
 
 Prior art suggested appending a single message type (``MT'') to SBAS for authentication and its maintenance\cite{Neish_Dissertation}.
 It suggests that SBAS sends this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and 26-bits for the scheme's maintenance.
@@ -77,8 +85,9 @@ With TESLA's use, Provider and any users must be loosely time-synchronized, whic
 Therefore, our scheme must also describe its resistance to a Replay Attack.
 A Replay Attack is where a spoofer listens and then replays messages at a slightly delayed rate.
 After some time, the spoofer-induced time delay allows the spoofer to violate the loosely-time synchronized assumption and break the TESLA scheme.
-Prior art has described how an onboard receiver clock could be used to detect such an attack, given clock uncertainty \cite{time_sync_paper}.
-This work extends that work of prior art by specifying the onboard clock accuracy requirements and maintenance schedules to meet our scheme's security level, and we find those requirements reasonable for SBAS receivers.
+There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\cite{Psiaki2016,Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
+Prior art has described how an onboard receiver clock could be used to detect such an attack, given clock uncertainty\cite{time_sync_paper}.
+This work extends that work of prior art by discussing how onboard clock, external clocks, and maintenance conditions can be used to mitigate Replay Attack threats.
 
 \subsection{ECDSA}
 ECDSA is a standardized asymmetric authentication protocol.
@@ -112,7 +121,7 @@ Algorithm \ref{alg: TESLA} describes the protocol more concretely.
 \end{figure}
 
 TESLA uses only a single cryptographic primitive: a cryptographically secure hash function.
-In this proposal, we select a salted SHA-256, truncated to 128-bits (herein, the ``Hash Function'' or $\textrm{H}(\cdot)$), so we describe the TESLA protocol concretely using our selection without loss of generality.
+In this proposal, we select a salted SHA-256, truncated to the left-most 128-bits (herein, the ``Hash Function'' or $\textrm{H}(\cdot)$), so we describe the TESLA protocol concretely using our selection without loss of generality.
 We restrict the Hash Function domain to be equivalent to its range: the set of 128-bit integers.
 Since the audience of this work are experts in navigation, we use geometric terms {\em path} and {\em point} instead of {\em key chains} and {\em key} and describe TESLA with the geometry of a {\em one-way path}.
 Let each 128-bit integer be called a Hash Point, and let a collection of Hash Points {\em consecutively} related via the Hash Function be a Hash Path.
@@ -198,7 +207,7 @@ We propose the Hash Path be defined according to Equation \eqref{eq: hash path} 
 p^P_{i+1} = \textrm{H} \left(p^P_i \oplus S^P \oplus (t_i \oslash 6) \right)
 \end{equation}
 The purpose of the integer division is explained in Section \ref{sec: alert salt}.
-We propose a 16-bit truncated signature from HMAC authenticates each message.
+We propose a left-most 16-bit truncated signature from HMAC authenticates each message.
 The key $k_j$ for each message $m_j$ will be according to Equation \ref{eq: key}, and the signature $s_j$ derived therefrom will be according to Equation \eqref{eq: signature}.
 $t_j$ is the integer time of the authenticated messages broadcast and receipt.
 PRN is the pseudorandom code associated with the broadcasting geostationary satellite.
@@ -618,7 +627,7 @@ Therefore, it is critical to the Hash Path security that Provider and the receiv
 Loosely time-synchronized means that the receiver has a sufficient, externally-trusted time to reject HMACS after their deriving key has been released.
 This poses a catch-22 to aircraft that use an isolated GNSS receiver since GNSS providers the time.
 GNSS ranging signals allow receivers to derive an accurate, atomic-clock-synchronized time which is certainly accurate enough to support the delay-release schedule.
-There are ways from the prior art by which receivers can establish trust in GNSS ranging signals[CITE]; however, GNSS ranging signals are not rigorously authenticated with cryptography.
+There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\cite{Psiaki2016,Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
 
 To break SBAS security by breaking the loosely time-synchronized assumption, an adversary must spoof the receiver time by delaying the receiver time.
 In our case, this delay is 11 seconds.
