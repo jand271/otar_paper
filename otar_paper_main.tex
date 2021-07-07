@@ -284,7 +284,7 @@ This is explained in Section \ref{sec: alert salt}.
 \begin{figure}
 \centering
 \includegraphics[width=0.5\linewidth]{fig/alertschedule.png}
-\caption{Conceptual diagram of how the salting scheme accommodates perturbations to the MT50 schedule. In the diagram, m means a standard message, and I means an integrity message. Integrity messages that would be sent on a nominal schedule are marked blue, and extra integrity messages during an alert are marked yellow. Note that $T \oslash 6$ does not change in the event of an alert message MT50 delay, so the Hash Path is preserved.}
+\caption{Conceptual diagram of how the salting scheme accommodates perturbations to the MT50 schedule. In the diagram, m means a standard message, and I means an integrity message. Integrity messages that would be sent on a nominal schedule are marked blue, and extra integrity messages during an alert are marked yellow. Note that $T \oslash 6$ does not change in the event of an alert message MT50 delay, as shown in red, so the Hash Path is preserved.}
 \label{fig: alert schedule}
 \end{figure}
 
@@ -314,7 +314,7 @@ These messages do not have to be sent on a rigid schedule and can be sent in the
 	& & 2 - ECDSA Level 2 Public Key \\
 	& & 3 - TESLA Hash Path End Hash Point \\ \hline
 	Germane Key Hash & 16 & Truncated Unsalted 16-bit Hash of Entire Germane Key \\ \hline
-	Germane Key Expiration & 29 & GPS Week and Time of Week of Germane Key Expiration \\ \hline
+	Germane Key Expiration & 32 & Absolute GPS time (i.e., seconds since GPS epoch) of Germane Key Expiration \\ \hline
 	Authenticating Key Hash & 16 & Truncated Unsalted 16-bit Hash of Entire Authenticating Key \\ \hline
 	\multirow{4}{*}{Cipher Text Type} & \multirow{4}{*}{2} & 0 - Public Key, AES Decryption Key, or Hash Path End \\
 	& & 1 - Authenticating cipher text derived from the Authenticating Key \\ 
@@ -322,7 +322,7 @@ These messages do not have to be sent on a rigid schedule and can be sent in the
 	& & 3 - Spare \\ \hline
 	Cipher text Page Number & 4 & The Ordered Section of Germane cipher text - max 16 with 4 bits\\ \hline
 	Parity Bit & 1 & Parity bit for a compressed public key \\ \hline
-	Spare & 13 & Additional features possible discussed in Section \ref{sec: MT51 modularity} \\ \hline
+	Spare & 10 & Additional features possible discussed in Section \ref{sec: MT51 modularity} \\ \hline
 	Sum Total & 88 & \\ \hline
 \end{tabular}
 \caption{Bit allocation of ciphertext metadata. To distinguish the key updated with a specific MT51 and the key used to authenticate that MT51, we call the key associated with the MT51-delivered ciphertext the Germane Key and the key used to authenticate that delivered key the Authenticating Key.}
@@ -456,7 +456,7 @@ Provider would need to be careful that two unexpired keys don't share the same 1
 To promote service continuity, SBAS Providers could mutually broadcast each other's Hash Path Ends and key maintenance.
 SBAS Providers would not need access to each other's secrets; they would only act as a repeater.
 Whereas Section \ref{sec: MT51 Freq} discusses higher MT51-frequency to support the local SBAS authentication from cold receiver start, this feature would be low frequency to support the local Provider schedule.
-Having Providers broadcasting each other keys at low frequency would aid in the time-of-first-authenticating-fix when transferring to a new SBAS Provider.
+Having Providers broadcasting each other keys at low frequency would aid in the time-of-first-authenticated-fix when transferring to a new SBAS Provider.
 Consider two adjacent SBAS systems, such as WAAS and EGNOS, and an aircraft traversing from Europe to North America.
 It takes several hours for aircraft to make this journey.
 If EGNOS broadcasts the WAAS keys once an hour, any aircraft that makes that journey will receive the keys necessary to operate with WAAS before it enters North America, decreasing the WAAS time of the first authenticated fix to zero. 
@@ -625,14 +625,15 @@ We feel that the scheme as delineated above, where the Hash Paths Ends are separ
 The keys that authenticate all SBAS messages with HMACs derive from the Hash Path, which is delay-released on a schedule.
 Therefore, it is critical to the Hash Path security that Provider and the receiver are loosely time-synchronized.
 Loosely time-synchronized means that the receiver has a sufficient, externally-trusted time to reject HMACS after their deriving key has been released.
-This poses a catch-22 to aircraft that use an isolated GNSS receiver since GNSS providers the time.
+This poses a catch-22 to aircraft that use an isolated GNSS receiver since GNSS provides the time.
 GNSS ranging signals allow receivers to derive an accurate, atomic-clock-synchronized time which is certainly accurate enough to support the delay-release schedule.
 There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\cite{Psiaki2016,Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
 
 To break SBAS security by breaking the loosely time-synchronized assumption, an adversary must spoof the receiver time by delaying the receiver time.
-In our case, this delay is 11 seconds.
-If the receiver clock were 11 seconds behind Provider's clock, then an adversary listening to Provider could note the delay-released Hash Point, derive the keys, and generate forged HMACs.
-Naively, one could ensure that the receiver does not allow 11-second jumps of time to mitigate; however, this strategy would not work with a creeping Replay Attack, the worst-case attack model we examine in this work.
+In our case, this delay is 7 seconds.
+If the receiver clock were 7 seconds behind Provider's clock, then an adversary listening to Provider could note the delay-released Hash Point, derive the keys, and generate forged HMAC.
+The longer the delay, the more HMACs an adversary can forge.
+Naively, one could ensure that the receiver does not allow 7-second jumps of time to mitigate; however, this strategy would not work with a creeping Replay Attack, the worst-case attack model we examine in this work.
 In a creeping Replay Attack, an adversary listen and replays the GNSS and SBAS signals but incrementally delay them slowly enough to avoid detection by the receiver.
 There are several mitigation strategies to mitigate the creeping Replay Attack.
 
@@ -640,7 +641,7 @@ The first is to use its onboard clock to evaluate a spoofed-time hypothesis.
 The prior art has explored how to use clock tolerances to generate and use tolerance bounds to assert clock trust\cite{time_sync_paper}.
 We have explored a few methodologies to fuse GNSS and onboard clock to evaluate whether a receiver is actively in a creeping Replay Attack, such as Pearson hypothesis tests and Kalman-filter-based hypotheses tests.
 The explicit hypothesis methodologies and their evaluation are left for other work.
-These strategies can detect a creeping Replay Attack before the 11-second breakage boundary, provided the delay rate is faster than the uncertainty bound of the onboard clock.
+These strategies can detect a creeping Replay Attack before the 7-second breakage boundary, provided the delay rate is faster than the uncertainty bound of the onboard clock.
 For instance, a consumer quartz clock oscillator will gain or lose 15 seconds a month[CITE].
 This means that any hypothesis test that exclusively uses the onboard clock to estimate an authentic time is information-bound to 15 seconds per month.
 Aircraft caretakers and airport security officials could consider implementing procedures that guarantee that the aircraft receiver periodically receives a trusted GNSS and SBAS signals, such as while taxiing at an airport where security officials ostensibly monitor for spoofed signals and jamming.
@@ -653,10 +654,11 @@ This system addresses tangential security concerns such as internet-based bankin
 A receiver could compare its own time to an internet-based time or a cellular-based time.
 This comparison need only bound the GNSS-based time: the receiver can still utilize the accurate time derived from the GNSS positioning regression time, but check that it matches the internet-based time within a bound such as one second.
 This internet or a data-based time can be rigorously authenticated with cryptographic authentication according to the standard of the medium.
+The original TESLA protocol provides a secure time-synchronization procedure: Provider would establish a internet server to accept and operate on receiver-generated nonces that would work within the secure Hash Path\cite{perrig2005timed}.
 Our choice to use the word {\em compare} is intentional to address the concern about allowing external inputs regarding time into the isolated SBAS receiver.
-This comparison is achievable without suspecting the receiver's time to archetype hacking strategies.
+This comparison is achievable without exposing the receiver's time to archetype hacking strategies.
 Other strategies would also alert the pilot that the SBAS time is not trusted, such as incorporating the GNSS time estimate into the Air Traffic Control Radar Beacon System.
-If the beacon-broadcasted time were more than 11 seconds behind the trusted time on the ground, then ground services could alert the aircraft of the discrepancy.
+If the beacon-broadcasted time were more than 7 seconds behind the trusted time on the ground, then ground services could alert the aircraft of the discrepancy.
 
 Since the ranging signal remains unauthenticated via rigorous methods established with cryptography, SBAS must take a nuanced approach to assert the loosely time-synchronized assumption.
 
