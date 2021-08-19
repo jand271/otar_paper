@@ -429,14 +429,16 @@ If a receiver is off longer than the Hash Path's length or applicability, it wil
 
 Regarding loss tolerance of messages lost and security of 16-bit HMACs, we implement the key idea of \cite{Neish_Dissertation}.
 Rather than send one large HMAC to authenticate the previous five messages, we send five individual small HMACs.
-If we send one large HMAC and any of the previous five messages are lost, then none of the messages can be authenticated because one needs the complete set of data and signatures to verify with HMAC.
-Rather, the set of five smaller HMACs individually authenticate the five messages to protect against any message loss.
+If Provider sends one large HMAC per MT50 and any of the previous five messages are lost, then none of the messages can be authenticated because receiver needs the complete set of data and signatures to verify with one single HMAC.
+Instead, the set of five smaller HMACs individually authenticate each of the five messages individually accommodating message loss.
 The probability that an adversary can forge an HMAC will be $2^{-16}$ since each HMAC is 16 bits.
-To provide adequate protection against forgery, we specify a conservative forgery detection level.
-If any one of the smaller HMACs returns not verified from the HMAC verification algorithm, then the receiver must throw out all non-MT51 information from that particular SBAS satellite and start over as if in receiver cold start.
-While $2^{-16}$ is relatively weak security level, this is sufficient for the SBAS context because (1) an adversary does not yet have access to the delay-released key nor an HMAC verification oracle (from the cryptography security context), and (2) any forgery detection immediately throws all SBAS data.
-To forge a useful navigation solution, an adversary must forge approximately seven SBAS messages undetected, and continue to make forgeries as SBAS navigation information is repeatedly broadcast.
+To provide adequate protection against forgery, we specify a conservative forgery detection approach.
+If any one of the smaller HMACs fails the HMAC verification algorithm, then the receiver must throw out all non-MT51 information from that particular SBAS satellite and start over collecting new SBAS data.
+While $2^{-16}$ is relatively weak security level, this is sufficient for the SBAS context because (1) an adversary does not yet have access to the delay-released key nor an HMAC verification oracle (from the cryptography security context), and (2) any forgery detection immediately discards all prior SBAS data.
+To obtain a useful navigation solution, a receiver must obtain at least seven authenticated SBAS messages.
 The probability that an adversary could forge that many messages successfully is sufficiently small to meet the required security level.
+Another potential method to deter forgery is to require verification of two out of five of the signatures per MT50 before using any of that data.
+This decreases the probability of successful forgery to $2^{-32} < 10^{-9}$.
 
 Our selection of SHA-256 for the Hash Path and MAC generation is not necessarily required.
 We select SHA-256 because it is standard and widely used.
