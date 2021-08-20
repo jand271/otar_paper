@@ -49,7 +49,7 @@ If an efficient algorithm is discovered, the scheme is called broken, and the as
 
 Using cryptographic authentication methods poses certain challenges to SBAS.
 The main challenge is delivering the ciphertext via SBAS, given the data-bandwidth constraints.
-SBAS authentication security must rely on asymmetric cryptographic algorithms to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
+Since SBAS is an open signal, SBAS authentication security must rely on asymmetric cryptographic algorithms to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
 Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness, noting that certain parameters and characteristic security strengths listed here would be different if not using ECDSA.
 To meet a standard 128-bit security level, a single signature requires 512-bits, which dwarfs the maximum allowable SBAS data bits per message at 216 bits.
 Prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating ciphertext \cite{todd-pki-scheme,other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
@@ -58,7 +58,7 @@ Prior art has suggested using a combination of ECDSA with another algorithm call
 TESLA uses a delayed-release mechanism to authenticate data with less authenticating ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
 SBAS cannot exclusively use TESLA; TESLA must be used in tandem with ECDSA to achieve authentication security.
 The relationship between the proposed TESLA-ECDSA scheme can be described as follows: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's use of TESLA as periodic {\em maintenance}.
-The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to OTAR.
+The prior work has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to perform OTAR.
 This work addresses the main challenge by suggesting a more efficient authentication maintenance scheme without using the Q channel.
 Moreover, this work leverages prior art to build specific features to the TESLA scheme to assert security \cite{chain-security}.
 
@@ -173,7 +173,7 @@ We propose a two-level ECDSA key structure, as suggested \cite{Neish_Dissertatio
 
 Level-1 keys will be 256-bit ECDSA keys managed internationally by a trusted Certificate Authority (``CA'').
 Each level-1 key will be in use for 100 weeks.
-CA shall compute a large number of level-1 keys for use in the perpetual future and then encrypt each key separately via AES-128 with those encryption keys held secret by CA.
+CA shall compute a large number of level-1 keys for use in the perpetual future and then encrypt each key individually via AES-128 with different AES encryption keys (one per level-1 key) held secret by CA.
 CA will distribute the AES-ciphertext to receiver manufacturers.
 Receivers will come preloaded with the collection of 512-bit public keys, encrypted with 128-bit keys via AES-128.
 As level-1 keys expire, CA will distribute the keys to decrypt the AES-ciphertext, one at a time, for Provider to distribute.
@@ -203,7 +203,7 @@ Therefore, a Hash Path will include 100801 Hash Points: one for each sixth secon
 
 To generate a Hash Path $P$, Provider will derive a secure random 128-bit salt $S^P$ from level-2 ECDSA authentication, as described in Section \ref{sec: salt}.
 Let the Hash Points of $P$ be denoted $p^P_i$, and let $t_i$ be the time at which Provider publicly releases $p^P_i$ via broadcast.
-Here, $t_i$ is an integer time (e.g., time in seconds since epoch).
+Here, $t_i$ is an integer time (e.g., time in seconds since GPS epoch).
 We propose the Hash Path be defined according to Equation \eqref{eq: hash path} with $\oplus$ denoting exclusive or and $\oslash$ denotes integer division.
 \begin{equation}\label{eq: hash path}
 p^P_{i+1} = \textrm{H} \left(p^P_i \oplus S^P \oplus (t_i \oslash 6) \right)
@@ -381,7 +381,7 @@ sixth, whether the payload itself is a key or authentication signature;
 seventh, the page number of the authenticating ciphertext so that the receiver can piece together all the authenticating ciphertext pages over time.
 
 The signatures to authenticate a particular key must derive from the entire set of full MT51 messages used to deliver them.
-The metadata associated with a authenticating ciphertext includes the expiration time.
+The metadata associated with an authenticating ciphertext includes the expiration time.
 These keys are only secure for specific lengths of time, as described in Section \ref{sec: ECDSA Key Structure} and \ref{sec: TESLA Hash Path and HMAC Keys}; hence, the expiration time must be authenticated together with the corresponding authenticating ciphertext so that each key is retired securely.
 After the expiration of a particular key, receivers must reject messages signed with that expired key.
 
@@ -430,10 +430,11 @@ If a receiver is off longer than the Hash Path's length or applicability, it wil
 Regarding loss tolerance of messages lost and security of 16-bit HMACs, we implement the key idea of \cite{Neish_Dissertation}.
 Rather than send one large HMAC to authenticate the previous five messages, we send five individual small HMACs.
 If Provider sends one large HMAC per MT50 and any of the previous five messages are lost, then none of the messages can be authenticated because receiver needs the complete set of data and signatures to verify with one single HMAC.
-Instead, the set of five smaller HMACs individually authenticate each of the five messages individually accommodating message loss.
-The probability that an adversary can forge an HMAC will be $2^{-16}$ since each HMAC is 16 bits.
-To provide adequate protection against forgery, we specify a conservative forgery detection approach.
-If any one of the smaller HMACs fails the HMAC verification algorithm, then the receiver must throw out all non-MT51 information from that particular SBAS satellite and start over collecting new SBAS data.
+Instead, each HMAC from the set of five smaller HMACs individually authenticates each of the five prior messages individually thus accommodating message loss.
+Until the Hash Point is released, the HMACs are indistinguishable from random bits.
+Since the Hash Point is not known to an adversary when the HMACs are released, the probability that an adversary can forge a 16-bit HMAC is $2^{-16}$.
+To provide adequate protection against forgery, we must specify a conservative forgery detection approach.
+For example, if any one of the smaller HMACs fails the HMAC verification algorithm, then the receiver must throw out all non-MT51 information from that particular SBAS satellite and start over collecting new SBAS data.
 While $2^{-16}$ is relatively weak security level, this is sufficient for the SBAS context because (1) an adversary does not yet have access to the delay-released key nor an HMAC verification oracle (from the cryptography security context), and (2) any forgery detection immediately discards all prior SBAS data.
 To obtain a useful navigation solution, a receiver must obtain at least seven authenticated SBAS messages.
 The probability that an adversary could forge that many messages successfully is sufficiently small to meet the required security level.
@@ -449,7 +450,7 @@ Providers would simply replace the single function in their implementation and c
 
 \subsection{Unique Keys and HMAC Security} \label{sec: HMAC security}
 
-For our HMAC use in this scheme to be secure, we must assert there exists no known efficient algorithm that can generate HMAC forgeries.
+For our HMAC use in this scheme to be secure, we must assert there exists no known efficient algorithm that can generate HMAC forgeries under our use case.
 To meet that, Equation \ref{eq: key} introduces two xor operations on the Hash Point to derive the HMAC keys.
 The first is the current time $t_j$.
 Without this operation, an adversary can break the security of the scheme.
@@ -566,9 +567,9 @@ The ciphertext page number informs the receiver from which set of eight satellit
 For GPS, this would mean four of these MT51s.
 However, MT1 and MT31 already provide an issues-of-data mask of up to the 92-most relevant satellites currently under correction of a particular SBAS.
 Therefore, we propose that the order of the eight HMACs correspond to the order prescribed in the issues of data already provided to receiver.
-The issue of data must be placed in the unused sections of the metadata, and the ciphertext page field would determine the relevant eight, in order, among the set of 92.
-Since the issues of data requires only two bits, SBAS could use the unused German Key Hash, German Key Expiration, and Authenticating Key Hash to send 12 HMACs per MT51.
-Alternatively, one could define a new message type that delivers 13 HMACs, the issue of data, and page number.
+The issue of data index, either the IODP or IODM, must be placed in the unused sections of the metadata, and the ciphertext page field would determine the relevant eight, in order, among the set of 92.
+Since the issue of data index requires only two bits, SBAS could use the unused German Key Hash, German Key Expiration, and Authenticating Key Hash to send 12 HMACs per MT51.
+Alternatively, one could define a new message type that delivers 13 HMACs, the issue of data index, and page number.
 
 \subsection{MT51 Schedule Frequency} \label{sec: MT51 Freq}
 
