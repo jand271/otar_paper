@@ -124,7 +124,7 @@ Algorithms \ref{alg: TESLA provider} and \ref{alg: TESLA receiver} describe the 
 
 TESLA uses only a single cryptographic primitive: a cryptographically secure hash function.
 In this proposal, we select a salted SHA-256, truncated to the left-most 128-bits (herein, the ``Hash Function'' or $\textrm{H}(\cdot)$), so we describe the TESLA protocol concretely using our selection without loss of generality.
-We restrict the Hash Function domain to be equivalent to its range: the set of 128-bit integers.
+We truncate Hash Function output to the 128 most-significant bits to make 128-bit integers.
 Since the audience of this work are experts in navigation, we use geometric terms {\em path} and {\em point} instead of {\em key chains} and {\em key} and describe TESLA with the geometry of a {\em one-way path}.
 Let each 128-bit integer be called a Hash Point, and let a collection of Hash Points {\em consecutively} related via the Hash Function be a Hash Path.
 Hash Points further along the Hash Path -not consecutive- are related by repeated application of the Hash Function.
@@ -204,18 +204,18 @@ Therefore, a Hash Path will include 100801 Hash Points: one for each sixth secon
 To generate a Hash Path $P$, Provider will derive a secure random 128-bit salt $S^P$ from level-2 ECDSA authentication, as described in Section \ref{sec: salt}.
 Let the Hash Points of $P$ be denoted $p^P_i$, and let $t_i$ be the time at which Provider publicly releases $p^P_i$ via broadcast.
 Here, $t_i$ is an integer time (e.g., time in seconds since GPS epoch).
-We propose the Hash Path be defined according to Equation \eqref{eq: hash path} with $\oplus$ denoting exclusive or and $\oslash$ denotes integer division.
+We propose the Hash Path be defined according to Equation \eqref{eq: hash path} with $||$ denoting concatenation and $\oslash$ integer division.
 \begin{equation}\label{eq: hash path}
-p^P_{i+1} = \textrm{H} \left(p^P_i \oplus S^P \oplus (t_i \oslash 6) \right)
+p^P_{i+1} = \textrm{H} \left(p^P_i || S^P || (t_i \oslash 6) \right)
 \end{equation}
 The purpose of the integer division is explained in Section \ref{sec: alert salt}.
 We propose a left-most 16-bit truncated signature from HMAC authenticates each message.
 The key $k_j$ for each message $m_j$ will be according to Equation \ref{eq: key}, and the signature $s_j$ derived therefrom will be according to Equation \eqref{eq: signature}.
 $t_j$ is the integer time of the authenticated messages broadcast and receipt.
 PRN is the pseudorandom code associated with the broadcasting geostationary satellite.
-We discuss the necessity of the xor operations of Equation \eqref{eq: key} in Section \ref{sec: HMAC security}.
+We discuss the necessity of the concatenation and HMAC operations of Equation \eqref{eq: key} in Section \ref{sec: HMAC security}.
 \begin{align} 
-k_j &= p^P_i \oplus t_j \oplus \textrm{PRN} \label{eq: key} \\
+k_j &= \textrm{HMAC}(p^P_i, t_j || \textrm{PRN} \label{eq: key}) \\
 s_j &= \textrm{HMAC}(k_j, m_j) \label{eq: signature}
 \end{align}
 
@@ -251,7 +251,7 @@ Algorithm \ref{alg: TESLA provider} and \ref{alg: TESLA receiver} concretely des
 		$H_2$ holds data for level-2 ECDSA keys and associated level-1 signatures on those keys. \\
 		$H_3$ holds data for TESLA Hash Path Ends $p^P_{n+1}$ and associated level-2 signatures on those Hash Path Ends. \\
 		Each element in the Hash Tables store metadata such as the key expiration time and the relevant higher-level authenticating key. \\
-		Await receipt of all needed pages of MT51, called the Authentication Stack to assert authenticated Hash Path Ends. \\
+		Await receipt of all needed pages of MT51, called the Authentication Stack, to assert authenticated Hash Path Ends. \\
 		A Hash Path End element $p^P_{n+1}$ stored in $H_3$ is called authenticated if itself and signature are ECDSA verified by an authenticated element in $H_2$. \\
 		A public ECDSA key element stored in $H_2$ is called authenticated if itself and signature data are ECDSA verified by an authenticated element in $H_1$. \\
 		A public ECDSA key element stored in $H_1$ is called authenticated if it was prestored from the CA.
@@ -267,8 +267,8 @@ Algorithm \ref{alg: TESLA provider} and \ref{alg: TESLA receiver} concretely des
 		Recall $m_1 \cdots m_5$ \\ 
 		Recall $m_6$ with signatures $s_1 \cdots s_5$ \\
 		$i \gets 1$ \\
+		$p_t \gets H(p_r)$ via Equation \eqref{eq: hash path} \\
 		\While{$i \leq$ Maximum Iteration}{
-			$p_t \gets H(P_r)$ via Equation \eqref{eq: hash path} \\
 			\eIf{$p_t \in H_3$ and $H_3(p_t)$ is authenticated and not expired via ECDSA through level-1}{
 				$m_{12}$ is authenticated \\
 				Check $m_1 \cdots m_5$ with $p_r$ and $s_1 \cdots s_5$ to authenticate $m_1 \cdots m_5$ \\
@@ -278,9 +278,9 @@ Algorithm \ref{alg: TESLA provider} and \ref{alg: TESLA receiver} concretely des
 			$i \gets i + 1$ \\
 			Note: caching previously authenticated $p_t$ prevents excessive hashing to Hash Path End each iteration.
 		}
-		Note: after this iteration $m_1 \cdots m_5$ and $m_{12}$ are authenticated. $m_7 \cdots m_{11}$ are authenticated at the next iteration. \\
 		$m_1 \cdots m_5 \gets m_7 \cdots m_{11}$ \\
 		$m_6 \gets m_{12}$
+		Note: after this iteration $m_1 \cdots m_5$ and $m_{12}$ are authenticated. $m_7 \cdots m_{11}$ are authenticated at the next iteration. \\
 	}
 \end{algorithm}
 
@@ -448,9 +448,9 @@ The widespread and straightforward use of SHA-256 aids in the continued security
 If the security SHA-256 is broken, it will be widely publicized and quickly deprecated for another hash function.
 Providers would simply replace the single function in their implementation and continue operation, much like the recent SHA-1 deprecation.
 
-\subsection{Unique Keys and HMAC Security} \label{sec: HMAC security}
+\subsection{Cryptographically Independent Keys and HMAC Security} \label{sec: HMAC security}
 
-For our HMAC use in this scheme to be secure, we must assert there exists no known efficient algorithm that can generate HMAC forgeries under our use case.
+For our small HMAC use in this scheme to be secure, we must assert there exists no known efficient algorithm that can generate HMAC forgeries under our use case.
 To meet that, Equation \ref{eq: key} introduces two xor operations on the Hash Point to derive the HMAC keys.
 The first is the current time $t_j$.
 Without this operation, an adversary can break the security of the scheme.
