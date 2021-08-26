@@ -749,26 +749,7 @@
 		These considerations become especially germane for aircraft that traverse different SBAS service volumes periodically.
 		For instance, consider aircraft that make transatlantic regularly, which, when outside a specific service volume, behave as a shutdown receiver.
 		Our selection from this Section \ref{sub:mt51_schedule_frequency} was to accommodate a short time of the first fix.
-		With a longer Hash Path, as transatlantic flight cross service volumes, the more likely the time of the first fix will be bounded by receiver computational hash capability instead of being bounded by MT51 delivery schedule. 
- 
-\section{Regarding a New SBAS System} \label{sec:regarding_a_new_sbas_system}
-
-	For the scheme of this work, we ensure backward compatibility with existing receivers by achieving authentication via appending two messages, MT50 and MT51, to the SBAS schedule.
-	Old receivers need only disregard MT50s and MT51s.
-	However, how would this scheme change if we did not need to manage backward compatibility?
-	We suggest a 24-bit HMAC replace the current 24-bit CRC.
-
-	SBAS already provides forward error correction features to the signal.
-	Therefore the current use of the 24-bit CRC is redundant.
-	Using these 24-bits for authentication provides several advantages.
-	First, 24-bit HMACs provide better security than 16-bit HMACs.
-	Second, appending the HMAC to its message aids with efficiency and loss tolerance.
-	As written now, this scheme separately sends messages and HMACs.
-	If a message or its succeeding MT50 are lost, both messages are effectively lost.
-	The message and the HMAC must be received to authenticate, but the intermittent loss of each affects the other.
-	It would be more efficient to place the message and the HMAC together in the same message so that a particular message lost does not affect other messages' bit efficiency and authenticity. 
-	Third, replacing the CRC with the 24-bit HMAC would eliminate the need to MT50.
-	Instead, after augmenting the MT51 metadata, MT51 could distribute the Hash Points every sixth message, in addition to the OTAR Authentication Stack in pieces every 1 in 18 messages.
+		With a longer Hash Path, as transatlantic flight cross service volumes, the more likely the time of the first fix will be bounded by receiver computational hash capability instead of being bounded by MT51 delivery schedule.
 
 \section{TESLA Time Synchronization} \label{sec:tesla_time_synchronization}
 
