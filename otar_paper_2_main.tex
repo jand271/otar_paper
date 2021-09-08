@@ -515,7 +515,7 @@
 			Sending and arrival times, rounded down to the nearest integer, are the same for Provider and receiver, since messages are sent each second and transmission time-of-flight is less than a second.
 			Using the time, instead of the integer number of points from the Hash Path start, provides several advantages.
 			Upon start, a receiver knows how to verify a Hash Point since Equation~\eqref{eq: hash path} is only a function of current integer time and the ECDSA authenticating ciphertext.
-			Moreover, it allows the switching of Hash Paths to occur on a non-rigid schedule.
+			Moreover, it allows the switching of Hash Paths to occur on a non-rigid schedule, which aids with security as well \cite{chain-security}.
 			While we specify a week interval, and it would be natural to have a new Hash Path begin at the beginning of a GNSS week, Provider need not communicate the start and length of Hash Paths as overhead or metadata for a non-rigid schedule because of the hashing properties of the Hash Point.
 			If Provider were to switch Hash Paths arbitrarily, there is a constant-time complexity for the receiver to check if a new Hash Point hashes to the current Hash Path or a new one, as seen in Algorithm~\ref{alg: TESLA receiver}.
 
