@@ -1,0 +1,92 @@
+
+\documentclass[letterpaper,times]{IONconf/IONconf}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{float}
+
+\title{On SBAS Authentication with OTAR Schemes}
+\author{Jason Anderson}
+
+\begin{document}
+
+\begin{abstract}
+	This document describes the differences between MAAST and the scheme described in On SBAS Authentication with OTAR Schemes \cite{Anderson2021}.
+	The principal differences include the level-1 key level strength and the use of uncompressed public keys.
+	These differences were engineered to keep the same number of messages of the Authentication Stack, to ensure correct continuity and availability results with MAAST while decreasing the software engineering work required.
+	Moreover, MAAST does not yet salt the Hash Path.
+\end{abstract}
+
+\section{Total Authentication Stack Data}
+
+	
+	\begin{table}[H]
+	\center
+	\begin{tabular}{|c|c|c|c|c|} \hline
+		Key Type & Security Level & Uncompressed Public Key & Compressed Public Key  & Signature Derived Therefrom \\ \hline
+	    ECDSA-128 & 256 &  512 &  257 &  512 \\ \hline
+	    ECDSA-256 & 128 & 1024 &  513 & 1024 \\ \hline
+		TESLA-128 & 128 &  128 &  128 &  N/A \\ \hline
+	\end{tabular}
+	\caption{Table that describes the data lengths for each key security level type.}
+	\label{Data Requirements}
+	\end{table}
+
+	The scheme from \cite{Anderson2021} uses a ECDSA-256 for Level 1, ECDSA-128 for level 2, and TESLA-128 for level 3. 
+	And it distributes the compressed public keys for a total of 16 MT51 messages.
+	Rather than distribute the Level-1 public key over SBAS, the public level 1 keys are preloaded onto receivers in an encrypted form.
+	SBAS distributes the 128-bit decryption key for receivers to decrypt the on-board level-1 public key.
+	From \cite{Anderson2021}, the meta-data table includes a space for the extra bit required to distribute a compressed key.
+
+	\begin{table}[H]
+	\center
+	\begin{tabular}{|c|c|c|c|c|c|} \hline
+		Key Level & Security Level & Compressed Public Key  & Signature from above & OTAR Bit Requirement & MT51s Req. \\ \hline
+		    1 & 256 & 513 & N/A & 128 & 1 \\ \hline
+		    2 & 128 & 257 & 1024 & 1280 & 10\\ \hline
+		TESLA & 128 & 128 & 512 & 640 & 5 \\ \hline
+	\end{tabular}
+	\caption{From \cite{Anderson2021}: Table that delineates the number of MT51s required to complete a single OTAR for a specific key. Level-1 keys require only the 128-bit AES decryption key, hence a single MT51. Level-2 keys require 256-bit key, and 1024 bits of authenticating ciphertext (twice the Level-1 public key length), hence 1280 bits and 10 MT51s. TESLA Hash Path Ends require 128-bit Hash Point and 512 bits of authenticating ciphertext (twice the level-2 public key length), hence 640 bits and 5 MT51s. Each MT51 unique page is required to OTAR.}
+	\label{tab: paper ciphertext lengths}
+	\end{table}
+
+	The MAAST implementation uses a ECDSA-128 for Level 1, ECDSA-128 for level 2, and TESLA-128 for level 3. 
+	And it distributes the uncompressed public keys for a total of 17 MT51 messages.
+	The public keys for both level 1 and level 2 are distributed over SBAS in MAAST.
+
+	\begin{table}[H]
+	\center
+	\begin{tabular}{|c|c|c|c|c|c|} \hline
+		Key Level & Security Level & Uncompressed Public Key & Signature from above & OTAR Bit Requirement & MT51s Req. \\ \hline
+		    1 & 128 & 512 & N/A & 512 & 4 \\ \hline
+		    2 & 128 & 512 & 512 & 1024 & 8\\ \hline
+		TESLA & 128 & 128 & 512 & 640 & 5 \\ \hline
+	\end{tabular}
+	\caption{From current MAAST: Table that delineates the number of MT51s required to complete a single OTAR for a specific key}
+	\label{tab: maast ciphertext lengths}
+	\end{table}
+
+	The reason for these differences is the following.
+	First, the default Java cryptography implementation usable by Matlab does not include ECDSA-256 with key lengths of 512.
+	Rather, that implementation uses an ECDSA-256 with key lengths of 521.
+	For a real SBAS implementation, the Providers can just select an arbitrary ECDSA-256 curve with key lengths of 512 to make them easier for distribution on SBAS.
+	Moreover, it was desired that MAAST require no additional libraries to run.
+	Since, we are limited to the default java cryptography library for the ease of the user, we made this modification.
+
+	To ensure that this modification provided the correct number of messages to match \cite{Anderson2021}, MAAST distributes uncompressed public keys.
+	In a real system, the provider should transmit the compressed keys to save bandwidth.
+	Furthermore, the Java cryptography library does not possess the ability to convert between compressed and uncompressed keys.
+	So MAAST does not yet possess that capability to convert between uncompressed and compressed keys manually.
+
+	The scheme from \cite{Anderson2021} needs 16 MT51 messages assuming that the Salt is derived from the ECDSA signature.
+	However, the salt could just be distributed with 1 additional MT51.
+	MAAST implementation needs 17 messages, which faithfully gives the correct or conservative number.
+	MAAST does not currently implement the Salt for the Hash Path.
+	To implement the Salt scheme that does not require an additional message from \cite{Anderson2021}, MAASt would need to incorporate custom java libraries.
+	Once again, these changes do not affect the availability and continuity results provided my MAAST.
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+\end{document}
