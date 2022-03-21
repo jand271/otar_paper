@@ -27,7 +27,7 @@
 
 \section{Introduction} \label{sec:introduction}
 
-	In this work, we delineate a complete Satellite-Based Augmentation System (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backward compatibility, data efficiency, and quick time to authenticated first fix.
+	In this work, we delineate a complete Satellite-Based Augmentation System (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backward compatibility, data efficiency, and quick time to authenticated first fix (``TFAF'').
 	Moreover, it is expandable to additional stakeholder feedback.
 	This work addresses the complete authentication scheme design, including connecting receiver hardware requirements to maintenance schedules, key updates, and scheme maintenance, and uses a full-stack Monte-Carlo SBAS simulation to test and evaluate the scheme's performance.
 
@@ -43,7 +43,7 @@
 	Therefore, appending additional cryptographic data to the SBAS data is a natural way to authenticate the SBAS data for civil users.
 	Additional SBAS broadcast messages could deliver cryptographic signatures and key values to users.
 	Using the mathematical primitives underlying cryptographic authentication methods, users could assert that only a Provider could have generated the SBAS data and the accompanying authenticating ciphertext.
-	In this work, we call the authenticating data ``signatures'', and signatures, together with the associated key data, either ``authenticating ciphertext'' or ``OTAR Payload'', referring to the pseudorandom data or the chunks separated for transmission to receiver, respectively.
+	In this work, we call the authenticating data ``signatures'', and signatures, together with the associated key data, either ``authenticating ciphertext'' or ``OTAR Payload'', referring to the cryptographic pseudorandom data or the chunks separated for transmission to receiver, respectively.
 	We call this data authenticating ciphertext not because it contains a cipher but because the data is pseudorandom and not human-readable.
 	The security of the authenticating ciphertext assumes that (1) Provider exclusively holds certain identifying information secret and (2) there exist no {\em known} efficient algorithms that can generate the authenticating ciphertext without the identifying information held secret.
 	If the identifying information (e.g., keys) is leaked, that information is called compromised and must be revoked.
@@ -76,13 +76,13 @@
 	While the scheme requires a steep authentication-message delivery frequency, it does not overburden the SBAS MT schedule.
 	We modify this work by appending another MT to SBAS to replace the 26-bits mentioned above dedicated for maintenance.
 	We design our proposed additional MT to be modular with the exclusive purpose of delivering all authentication ciphertext related to the scheme's maintenance.
-	This design allows for reasonable time-to-first-authenticated-fix requirements.
+	This design allows for reasonable TFAF requirements.
 	It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it requires minimal changes in the event of cryptographic primitive breakage.
 	Moreover, it scales well with increases to the security level requirements and is flexible and future-proof to anticipated feedback from Providers and SBAS stakeholders.
 
 	To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called Matlab Algorithm Availability Simulation Tool (``MAAST'')\cite{MAAST}.
 	MAAST has been used to evaluate SBAS design before and provides Monte-Carlo simulation results to evaluate how our design performs under message loss over the WAAS coverage area.
-	The tool shows that our proposed design outperforms Key Performance Indicators (each a ``KPI''), such as time to first authenticated fix, time to authentication per message, and robustness to message loss.
+	The tool shows that our proposed design outperforms Key Performance Indicators (each a ``KPI''), such as TFAF, time to authentication per message, and robustness to message loss.
 
 	With TESLA's use, Provider and any users must be loosely time-synchronized, which poses an interesting Catch-22 situation since GNSS provides the time.
 	Therefore, our scheme must also describe its resistance to a Replay Attack.
@@ -103,8 +103,7 @@
 		Provider uses the signing function, with the secret private key, to derive signatures on messages.
 		Each signature is a 2-tuple of $2n$-bit integers, for a total of $4n$ bits.
 		Receivers use the verifying function, with the public key and signatures, to assert that the private key holder generated the message and signature.
-		Since the protocol is secure, there is no {\em known} efficient algorithm that can compute the private key given the public key nor compute the signature on a message.
-		By efficient algorithm, we mean any algorithm that is faster than exhaustive search on the total 2n-bit private keyspace.
+		Since the protocol is secure, there is no {\em known} efficient algorithm that can compute the private key given the public key nor compute the signature on a message without the private key.
 		The protocol assumes that the receiver trusts the public key as from Provider.
 		The protocol is not loss-tolerant: if a single bit of a signature or message is lost, the protocol will fail to verify.
 
@@ -490,7 +489,7 @@
 		If Provider finds the overhead required to OTAR a Hash Path too burdensome on the schedule, Provider can increase the Hash Path's length and decrease the OTAR transmission frequency.
 		Increasing the Hash Path length requires Provider to compute a longer Hash Path per OTAR and receivers to hash more in the event of cold start, but this burden is negligible as commodity hardware can compute Hash Paths on the lengths specified in this work in seconds, see Section~\ref{sub:procedures}.
 		At a 128-bit Hash Point length, a Hash Path length on the order of decades is safe from attack \cite{Neish_Dissertation}.
-		Therefore, the OTAR transmission frequency is mainly driven by the desired time to first authenticated fix, see Section~\ref{sub:mt51_schedule_frequency}.
+		Therefore, the OTAR transmission frequency is mainly driven by the desired TFAF, see Section~\ref{sub:mt51_schedule_frequency}.
 
 		To meet a standard 128-bit security level for TESLA, we must use cryptographically independent 128-bit long keys for each HMAC.
 		It is desirable to minimize the number of bits required for TESLA Hash Path distribution.
@@ -502,9 +501,9 @@
 
 		While Providers could maintain separate Hash Paths for each satellite, using a single Hash Path could be used to decrease the time of receipt of the Authentication Stack for cold start receivers.
 		For instance, WAAS uses three geostationary satellites.
-		WAAS could use the same Hash Path for all of its satellites and broadcast the set of unique MT51 messages that make up the Authentication Stack out of phase, decreasing the time-of-first-authenticated-fix by 66.6\%, while accommodating receivers that do not track each satellite.
-		We can extend this argument for the L1 and L5 frequency bands, decreasing the time-of-first-authenticated-fix by 83.3\%.
-		Our selection of a time-of-first-authenticated-fix for a receiver tracking a single geostationary SBAS satellite on a single frequency is discussed in Section~\ref{sub:mt51_schedule_frequency}.
+		WAAS could use the same Hash Path for all of its satellites and broadcast the set of unique MT51 messages that make up the Authentication Stack out of phase, decreasing the TFAF by 66.6\%, while accommodating receivers that do not track each satellite.
+		We can extend this argument for the L1 and L5 frequency bands, decreasing the TFAF by 83.3\%.
+		Our selection of a TFAF for a receiver tracking a single geostationary SBAS satellite on a single frequency is discussed in Section~\ref{sub:mt51_schedule_frequency}.
 
 		\subsubsection{ECDSA-derived Hash Path Salt} \label{subsub:ecdsa_salt}
 
@@ -686,10 +685,10 @@
 		SBAS Providers could mutually broadcast each other's Hash Path Ends and key maintenance to promote service continuity.
 		SBAS Providers would not need access to each other's secrets; they would only act as a repeater.
 		Whereas Section~\ref{sub:mt51_schedule_frequency} discusses higher MT51-frequency to support the local SBAS authentication from cold receiver start, this feature would be low frequency to support the local Provider schedule.
-		Having Providers broadcasting each other keys at low frequency would aid in the time-of-first-authenticated-fix when transferring to a new SBAS Provider.
+		Having Providers broadcasting each other keys at low frequency would aid in the TFAF when transferring to a new SBAS Provider.
 		Consider two adjacent SBAS systems, WAAS and EGNOS, and an aircraft traversing from Europe to North America.
 		It takes several hours for aircraft to make this journey.
-		If EGNOS broadcasts the WAAS keys once an hour, any westward aircraft will receive the necessary WAAS keys to operate before reaching North America, decreasing the WAAS time of the first authenticated fix to zero. 
+		If EGNOS broadcasts the WAAS keys once an hour, any westward aircraft will receive the necessary WAAS keys to operate before reaching North America, decreasing the WAAS TFAF to zero. 
 		At a minimum, SBAS Providers could broadcast adjacent SBAS Providers' keys.
 		Without this feature, when an aircraft enters a new SBAS service volume the first time of the week (or 10 or 100 weeks), it must act as a cold-start receiver liable to the amount of time required to get the Authentication Stack, as specified in Section~\ref{sub:mt51_schedule_frequency}.
 
@@ -856,8 +855,8 @@
 
 	With MAAST, we modified the message scheduler to (1) send MT50s at a cadence of one in six messages and (2) send MT51s whenever the schedule allowed an opening.
 	Given the current use of the SBAS message schedule, MT51s were sent more frequently than the requirement specified above at one in seventeen messages.
-	Therefore, among our simulations, time-to-first-fix occurred usually within one minute, and if not, just outside one minute.
-	The time-to-first-fix is less than our requirement from Section~\ref{sub:mt51_schedule_frequency} because the simulated Provider sent the 16 unique messages within open slots of the SBAS schedule.
+	Therefore, among our simulations, TFAF occurred usually within one minute, and if not, just outside one minute.
+	The TFAF is less than our requirement from Section~\ref{sub:mt51_schedule_frequency} because the simulated Provider sent the 16 unique messages within open slots of the SBAS schedule.
 	Therefore, our simulation indicates that SBAS availability and continuity are not affected by this authentication scheme.
 
 \section{Conclusion} \label{sec:conclusion}
