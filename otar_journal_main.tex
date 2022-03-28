@@ -139,6 +139,8 @@
 		In other words, it is trivially easy to compute the output Hash Point of the Hash Function given the preimage Hash Point, but one can only use exhaustive search to find any preimage Hash Point.
 		It is a {\em one-way} path.
 		The domain of 128-bit integers, together with a randomized 128-bit salt inclusion to the Hash Function, make precomputation attacks (also called Rainbow Table Attacks) infeasible with modern supercomputers because it meets 128-bit security.
+		Our use of the term Hash Point also serves to avoid confusion with the overloaded use of ``key'' among TESLA and ECDSA.
+		Authentication private and public keys relate to ECDSA, and many keys will derive from TESLA Hash Points to achieve the required authentication data bandwidth efficiency.
 
 		To use a Hash Path to authenticate messages via TESLA, Provider computes a Hash Path derived from a {\em random} starting Hash Point and holds that Hash Path secret.
 		Provider broadcasts the last Hash Point along the Hash Path (herein, the "Hash Path End") together with an ECDSA signature derived therefrom.
@@ -271,18 +273,20 @@
 
 		In this work, we provide two MT51 definitions: MT51-A and MT51-B.
 		The A and B versions represent opposite ends of a spectrum that a final MT51 would lie.
+		MT51-A and MT51-B are alternatives to each other, i.e., they would not be used by Provider simultaneously in the same SBAS.
+		The difference between MT51-A and MT51-B is the amount of bits devoted to (1) the OTAR Payload Segment and (2) meta-data describing how to interpret the OTAR Payload Segment of a particular MT51.
 		MT51-A is bare bones and featureless; whereas, MT51-B contains features that could be relevant to the SBAS stakeholders.
 		We refrain from specifying which features should be incorporated, deferring until all SBAS stakeholders have had their considerations heard.
-		MT51-A and MT51-B are alternatives to each other, i.e., they would not be used by Provider simultaneously in the same SBAS.
 		If SBAS stakeholders do not care for the additional features described later with MT51-B, then the final design should be MT51-A.
 		If SBAS stakeholders desire some or all of the additional features of MT51-B, then the final design should be MT51-B.
 		Given the flexibility of the MT51 design (as discussed later), a final design would lie somewhere in between MT51-A and MT51-B.
-		The difference between MT51-A and MT51-B is the amount of bits devoted to (1) the OTAR Payload Segment and (2) meta-data describing how to interpret the OTAR Payload Segment of a particular MT51.
-		We will show that MT51-B is able to meet our requirements and not burden the SBAS schedule.
+		While this section provides the MT51 definitions for the MT51 spectrum ends, Section~\ref{sec:otar_design_methodology} discusses how to reason finding the right balance.
+		
 		Since MT51-A has less meta-data, more message data is dedicated to the OTAR Payload Segment, decreasing the number of unique MT51s required to OTAR.
 		Since less messages are required to OTAR with MT51-A, we expect better continuity, availability, and TFAF results.
+		We will show that feature-rich MT51-B is able to meet our requirements and not burden the SBAS schedule.
 		Since MT51-B already meets our KPIs and given the academic context of this work, we focus on MT51-B to study the feature potential to SBAS stakeholders.
-
+		
 		Table~\ref{tab: mt51-a} provides our proposed definition of MT51-A with bit allocations, and Tables~\ref{tab: mt51-b}~and~\ref{tab: meta-data} together provide our proposed definition of MT51-B with bit allocations.
 		Provider must broadcast MT51 messages approximately every 1 in 30 messages for MT51-A and every 1 in 18 messages for MT51-B, see Section~\ref{sub:mt51_schedule_frequency}.
 		These messages do not have to be sent on a rigid schedule and can be sent in the extra space within the current SBAS schedule.
@@ -322,7 +326,7 @@
 			\begin{tabular}{|c|c|l|} \hline
 				\multicolumn{3}{|c|}{MT51-B Payload Metadata} \\ \hline
 				Section & Bits & \multicolumn{1}{|c|}{Value} \\ \hline
-				Germane SBAS System & 5 & WAAS, EGNOS, MSBAS, GAGAN, et al. \\ \hline
+				Germane Service Provider ID & 5 & WAAS, EGNOS, MSBAS, GAGAN, et al. \\ \hline
 				\multirow{4}{*}{Germane Key Level} & \multirow{4}{*}{2} & 0 - Spare \\ 
 				& & 1 - ECDSA AES key to decrypt Level 1 ECDSA Public Key \\
 				& & 2 - ECDSA Level 2 Public Key \\
@@ -334,7 +338,7 @@
 				& & 1 - Authenticating psuedorandom data derived from the Authenticating Key \\ 
 				& & 2 - Spare \\ 
 				& & 3 - Core Constellation Broadcast Ephemerides Authentication \\ \hline
-				Payload Segment Number & 4 & The ordered segment number of Germane authenticating psuedorandom data - max 16 with 4 bits\\ \hline
+				Payload Segment Number & 4 & The ordered segment number of Germane authenticating psuedorandom data \\ \hline
 				Parity Bit & 1 & Parity bit for a compressed public key \\ \hline
 				Spare & 10 & Additional features possible discussed in Section~\ref{sub:metadata_design} \\ \hline
 				Sum Total & 88 & \\ \hline
@@ -703,7 +707,7 @@
 	Each MT50 will transmit half of a Hash Point, and each HMAC key will derive from two consecutive MT50 messages.
 	This increases the time-between authentication by a few seconds; however, it doubles the Hash Path security and maintains the loss-tolerant properties.
 
-	\subsection{Metadata Design} \label{sub:metadata_design}
+	\subsection{MT51-B Metadata Design} \label{sub:metadata_design}
 
 		Within the authenticating psuedorandom data metadata, we specify the inclusion of a Germane and Authenticating Key hash.
 		Since the payload is pseudorandom, metadata must exist so that the receiver to associate the unique MT51-B payloads.
@@ -714,7 +718,7 @@
 		Multiple keys, perhaps managed in isolation by Provider and CA, could provide redundant security.
 		Provider would need to be careful that two unexpired keys do not share the same 16-bit identifying hash; however, this would be a rare event, and Provider would need only randomly draw another key in that event.
 
-		SBAS Providers could mutually broadcast each other's Hash Path Ends and key maintenance to promote service continuity.
+		SBAS Providers could mutually broadcast each other's Hash Path Ends and key maintenance to promote service continuity; hence, we included the SBAS Service Provider ID in the metadata.
 		SBAS Providers would not need access to each other's secrets; they would only act as a repeater.
 		Whereas Section~\ref{sub:mt51_schedule_frequency} discusses higher MT51-frequency to support the local SBAS authentication from cold receiver start, this feature would be low frequency to support the local Provider schedule.
 		Having Providers broadcasting each other keys at low frequency would aid in the TFAF when transferring to a new SBAS Provider.
@@ -722,7 +726,7 @@
 		It takes several hours for aircraft to make this journey.
 		If EGNOS broadcasts the WAAS keys once an hour, any westward aircraft will receive the necessary WAAS keys to operate before reaching North America, decreasing the WAAS TFAF to zero. 
 		At a minimum, SBAS Providers could broadcast adjacent SBAS Providers' keys.
-		Without this feature, when an aircraft enters a new SBAS service volume the first time of the week (or 10 or 100 weeks), it must act as a cold-start receiver liable to the amount of time required to get the Authentication Stack, as specified in Section~\ref{sub:mt51_schedule_frequency}.
+		Without this feature, when an aircraft enters a new SBAS service volume the first time of the week (or 10 or 100 weeks), it must act as a cold-start receiver for to the amount of time required to get the Authentication Stack, as specified in Section~\ref{sub:mt51_schedule_frequency}.
 
 		Spare bits in the authenticating psuedorandom data metadata could accommodate other features.
 		These include scheme hyperparameters, such as the choice of a hash function or key or HMAC length.
@@ -742,6 +746,7 @@
 		The selection of 128-bits aids in the scheme's efficiency since all the data is integrally divisible by 128.
 		Special care can ensure that using fountain codes in the spare bits to augment those 128-bits would not change the integrally divisible property and maintain efficiency.
 		Moreover, as features discussed are discards, SBAS Providers could use MT51-A.
+		The balance between MT51-A and MT51-B is discussed in Section~\ref{sec: MT51 balance}.
 
 	\subsection{Core Constellation Ephemerides Authentication} \label{sub:core_eph}
 
@@ -818,6 +823,9 @@
 		To protect a specific new key's security, it would be prudent to only send that new key just before use.
 		For instance, we suggest Provider send the next 100-week level-1 key repeatedly beginning five weeks before its actual use and send the next 10-week level-2 and 1-week TESLA Hash Path End 1 week before its actual use.
 		To show how little this consideration affects the MT51-B SBAS bandwidth, if a Provider sent the next Authentication Stack once every hour, together with the current Authentication Stack once every 5 minutes, Provider would need to send a message from the set of 32 unique MT51s 1 out of every 17 messages, rounded up.
+		This assumes that each OTAR Payload Segment of the Authentication Stack is broadcast at the same frequency, as a base line.
+		Since some sections of the Authentication Stack change less frequently, further optimization could balance TFAF with the likelihood that receivers are off more than for 1 week, 10 weeks, or 100 weeks.
+		For instance, the slowly varying OTAR Payload Segments could be broadcast once ever 15 minutes, and the weekly varying OTAR Payload Segments every 2 minutes.
 
 		We note that it is not required that Providers and receivers stick to a set schedule for the key periods or the Hash Paths.
 		As discussed before, the MT51-B metadata and modularity afford flexibility in expirations of particular keys and the agreed schedule for expirations.
@@ -835,6 +843,29 @@
 		For instance, consider aircraft that make transatlantic regularly, which, when outside a specific service volume, behave as a shutdown receiver.
 		Our selection from this Section~\ref{sub:mt51_schedule_frequency} was to accommodate a short time of the first fix.
 		With a longer Hash Path, as flights cross service volumes, the more likely the TFAF will be bounded by receiver computational hash capability instead of being bounded by MT51 delivery schedule.
+
+	\subsection{MT51-A/B Balance} \label{sec: MT51 balance}
+
+		A final MT51 design must accommodate all the features relevant to SBAS stakeholders while maintaining the KPIs.
+		The most relevant KPI for this discussion is TFAF, since more features requires more metadata, which increases the number of unique MT51s required to OTAR.
+		We propose MT51-B because we make the claim that the minimum MT51 OTAR Payload Segment size acceptable is 128-bits, given the conveniences discussed in other sections, allowing us to specify a maximum metadata.
+		We propose MT51-A to (1) acknowledge there are other ways of constructing the MT51 metadata that remove definition redundancy and spare bits and (2) specify the minimum metadata.
+		For instance, the SBAS Provider could identify keys by their expiration time, removing the need for the Germane and Authenticating Key Hashes in the metadata; however, this would disallow parallel and redundant key management.
+		As SBAS Stakeholders discuss their desires, the metadata will become more or less crowded (noting even MT51-B has some spare bits).
+		Therefore, we offer a couple of suggests on how to reason about balancing the design while maintaining the schemes modularity, simplicity, and flexibility.
+
+		First, as features are removed, rather than shifting bit allocations from the metadata to OTAR Payload Segment, SBAS Providers could instead replace metadata bits with fountain codes.
+		This suggestion would (1) maintain the MT51's integer-division property on the authenticating psuedorandom data ensuring there is no wasted zero-padding on the delivered data, and (2) add loss-tolerant properties of MT51.
+		Fountain codes can arbitrarily occupy spare bits.
+		Second, MT51 could have a 192-bit OTAR Payload Segment length.
+		While this will not maintain the integer-division property always, this should limit any zero padding to 64-bits.
+		For instance, 18 MT51-Bs deliver 2304-bits, which can also be delivered with 12 MT51s with 192-bits of OTAR Payload Segment lengths.
+		An example Authentication Stack of this exact length would the same as that of Table~\ref{tab: psuedorandom lengths} with the following modifications: (1) using AES-256 to encrypt level-1 keys and (2) having a separate TESLA salt MT51.
+		This would leave up to 24-bits of metadata per message and there would be several OTAR Payload Segments that contain multiple types of psuedorandom data (like with MT51-A). 
+		Third, all of the meta data required could be placed in a single MT51 OTAR Payload Segment; i.e., a specific OTAR Payload Segment could contain all the meta data required to interpret the Authentication Stack.
+		We implore the SBAS Stakeholders to have a future-proofing mindset to allow for considerations that may be needed decades in the future.
+		Cryptographic primitives will break and need to be replaced; Quantum-computer resistant algorithms may be needed.
+		And the best way to maintain a future-proof mindset is to make MT51 agnostic to the data its delivering and expandable to any future psuedorandom data delivery required.
 
 \section{TESLA Time Synchronization} \label{sec:tesla_time_synchronization}
 
