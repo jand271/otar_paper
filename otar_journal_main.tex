@@ -42,23 +42,23 @@
 	It broadcasts data that assists GNSS users.
 	Therefore, appending additional cryptographic data to the SBAS data is a natural way to authenticate the SBAS data for civil users.
 	Additional SBAS broadcast messages could deliver cryptographic signatures and key values to users.
-	Using the mathematical primitives underlying cryptographic authentication methods, users could assert that only a Provider could have generated the SBAS data and the accompanying authenticating ciphertext.
-	In this work, we call the authenticating data ``signatures'', and signatures, together with the associated key data, either ``authenticating ciphertext'' or ``OTAR Payload'', referring to the cryptographic pseudorandom data or the chunks separated for transmission to receiver, respectively.
-	We call this data authenticating ciphertext not because it contains a cipher but because the data is pseudorandom and not human-readable.
-	The security of the authenticating ciphertext assumes that (1) Provider exclusively holds certain identifying information secret and (2) there exist no {\em known} efficient algorithms that can generate the authenticating ciphertext without the identifying information held secret.
+	Using the mathematical primitives underlying cryptographic authentication methods, users could assert that only a Provider could have generated the SBAS data and the accompanying authenticating psuedorandom data.
+	In this work, we call the authenticating data ``signatures'', and signatures, together with the associated key data, either ``authenticating psuedorandom data'' or ``OTAR Segment'', referring to the cryptographic pseudorandom data itself or the chunks separated for transmission to receiver, respectively.
+	We call this data authenticating psuedorandom data because the data is not human-readable nor predictable (without private secrets).
+	The security of the authenticating psuedorandom data assumes that (1) Provider exclusively holds certain identifying information secret and (2) there exist no {\em known} efficient algorithms that can generate the authenticating psuedorandom data without the identifying information held secret.
 	If the identifying information (e.g., keys) is leaked, that information is called compromised and must be revoked.
 	If an efficient algorithm is discovered, the relevant cryptographic primitives are called broken, and those primitives must be replaced.
 
 	Using cryptographic authentication methods poses challenges to SBAS.
-	The main challenge is delivering the authenticating ciphertext via SBAS, given the data-bandwidth constraints.
+	The main challenge is delivering the authenticating psuedorandom data via SBAS, given the data-bandwidth constraints.
 	Since SBAS is an open signal, SBAS authentication security must rely on asymmetric cryptographic algorithms to provide authentication, such as Elliptic Curve Digital Signature Algorithm (``ECDSA'').
 	Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness, noting that certain parameters and characteristic security strengths listed here would be different if not using ECDSA.
 	A single ECDSA signature requires 512-bits to achieve the standard 128-bit security level with ECDSA, which dwarfs the 216 data bits allowed per SBAS message.
 
-	Some prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating ciphertext \cite{todd-pki-scheme, other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
+	Some prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating psuedorandom data \cite{todd-pki-scheme, other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
 	Using the Q channel would strain the availability and continuity of SBAS systems at coverage area boundaries, which is undesirable to SBAS stakeholders.
-	Some prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation, gal-os-tesla} since it provides more efficient use of authenticating ciphertext and is loss-tolerant.
-	TESLA uses a delayed-release mechanism to authenticate data with less authenticating ciphertext than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
+	Some prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation, gal-os-tesla} since it provides more efficient use of authenticating psuedorandom data and is loss-tolerant.
+	TESLA uses a delayed-release mechanism to authenticate data with less authenticating psuedorandom data than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
 	SBAS cannot exclusively use TESLA: TESLA must be used in tandem with ECDSA to achieve authentication security.
 	In this work, we establish the following relationship between the proposed TESLA-ECDSA scheme: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's use of TESLA as periodic {\em maintenance}.
 	The prior art has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to perform OTAR.
@@ -75,7 +75,7 @@
 	It suggests that SBAS sends this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and 26-bits for the scheme's maintenance.
 	While the scheme requires a steep authentication-message delivery frequency, it does not overburden the SBAS MT schedule.
 	We modify this work by appending another MT to SBAS to replace the 26-bits mentioned above dedicated for maintenance.
-	We design our proposed additional MT to be modular with the exclusive purpose of delivering all authentication ciphertext related to the scheme's maintenance.
+	We design our proposed additional MT to be modular with the exclusive purpose of delivering all authenticating psuedorandom data related to the scheme's maintenance.
 	This design allows for reasonable TFAF requirements.
 	It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it requires minimal changes in the event of cryptographic primitive breakage.
 	Moreover, it scales well with increases to the security level requirements and is flexible and future-proof to anticipated feedback from Providers and SBAS stakeholders.
@@ -111,7 +111,7 @@
 
 		TESLA is an authentication protocol that allows a receiver to authenticate messages from Provider when used in tandem with other asymmetric authentication protocols.
 		This protocol poses several advantages over a purely asymmetric system relevant to GNSS and SBAS systems.
-		First, the protocol requires less authenticating ciphertext to authenticate messages from Provider.
+		First, the protocol requires less authenticating psuedorandom data to authenticate messages from Provider.
 		Second, the protocol is loss-tolerant.
 		Third, the receiver authentication computation is less strenuous.
 		Figure~\ref{fig: TESLA Diagram} provides a conceptual diagram of the TESLA description that follows.
@@ -160,7 +160,7 @@
 		In other words, for every Hash Path generated by Provider, Provider must use an asymmetric signature to ensure authentication security along the entire Hash Path.
 		Moreover, Provider and receiver must be loosely time-synchronized, which poses a Catch-22 problem since GNSS and SBAS Providers provide the time.
 		This provokes the question of why use TESLA at all and not just use only an asymmetric protocol.
-		Later in this work, we will show that using TESLA has better loss-tolerant properties, requires less ciphertext, and the time-synchronization problem can be accounted for.
+		Later in this work, we will show that using TESLA has better loss-tolerant properties, requires less authenticating psuedorandom data, and the time-synchronization problem can be accounted for.
 
 \section{SBAS Authentication Scheme Definition} \label{sec:sbas_authentication_scheme_definition}
 
@@ -192,7 +192,7 @@
 		The receiver receives a new level-2 public key and the authenticating signature, verifying the received new level-2 public key with the associated decrypted level-1 public key.
 
 		Provider will use its level-2 keys to authenticate TESLA Hash Path Ends, and keys derived from the TESLA Hash Paths will be used to authenticate the bulk of SBAS messages with HMACs.
-		For all levels, the authenticating ciphertext delivered will accompany data (e.g., SBAS message preamble, MT, other data) that must be sent per the definitions below.
+		For all levels, the authenticating psuedorandom data delivered will accompany data (e.g., SBAS message preamble, MT, other data) that must be sent per the definitions below.
 		A particular signature must derive from the entire SBAS message(s) used to deliver that particular key.
 		Concretely, when a level-1 key authenticates a level-2 key, the level-1 signature must derive from the entire set of messages used to deliver the level-2 key and the accompanying key expiration time. 
 		In other words, the level-1 signature must derive from the complete messages containing overhead data, not just the level-2 key itself.
@@ -277,9 +277,9 @@
 		If SBAS stakeholders do not care for the additional features described later with MT51-B, then the final design should be MT51-A.
 		If SBAS stakeholders desire some or all of the additional features of MT51-B, then the final design should be MT51-B.
 		Given the flexibility of the MT51 design (as discussed later), a final design would lie somewhere in between MT51-A and MT51-B.
-		The difference between MT51-A and MT51-B is the amount of bits devoted to (1) the OTAR Payload and (2) meta-data describing how to interpret the OTAR Payload of a particular MT51.
+		The difference between MT51-A and MT51-B is the amount of bits devoted to (1) the OTAR Payload Segment and (2) meta-data describing how to interpret the OTAR Payload Segment of a particular MT51.
 		We will show that MT51-B is able to meet our requirements and not burden the SBAS schedule.
-		Since MT51-A has less meta-data, more message data is dedicated to the OTAR Payload, decreasing the number of unique MT51s required to OTAR.
+		Since MT51-A has less meta-data, more message data is dedicated to the OTAR Payload Segment, decreasing the number of unique MT51s required to OTAR.
 		Since less messages are required to OTAR with MT51-A, we expect better continuity, availability, and TFAF results.
 		Since MT51-B already meets our KPIs and given the academic context of this work, we focus on MT51-B to study the feature potential to SBAS stakeholders.
 
@@ -291,13 +291,13 @@
 				\center
 				\begin{tabular}{|c|c|c|c|c|} \hline
 				\multicolumn{5}{|c|}{MT51-A Bit Allocation} \\ \hline
-					Preamble & MT & Page Number & OTAR Page & CRC \\ \hline
+					Preamble & MT & Segment Number & OTAR Segment & CRC \\ \hline
 					4 & 6 & 5 & 211 & 24 \\ \hline
 				\end{tabular}
 				\caption{
 					Bit allocation proposed for MT51-A at 250 bits per message. 
 					The Authentication Stack, defined in Section \ref{sub:procedures}, is composed of a total 2048 bits, requiring receipt of the ten unique messages to OTAR.
-					Since each page is cryptographic psuedorandom, a page number must accompany each OTAR page.
+					Since each segment is cryptographic psuedorandom, a segment number must accompany each OTAR segment.
 				}
 				\label{tab: mt51-a}
 			\end{table}
@@ -306,7 +306,7 @@
 			\center
 			\begin{tabular}{|c|c|c|c|c|} \hline
 				\multicolumn{5}{|c|}{MT51-B Bit Allocation} \\ \hline
-				Preamble & MT & Payload Metadata & OTAR Payload & CRC \\ \hline
+				Preamble & MT & Payload Metadata & OTAR Payload Segment & CRC \\ \hline
 				4 & 6 & 88 & 128 & 24 \\ \hline
 			\end{tabular}
 			\caption{
@@ -331,10 +331,10 @@
 				Germane Key Expiration & 32 & Absolute GPS time (i.e., seconds since GPS epoch) of Germane Key Expiration \\ \hline
 				Authenticating Key Hash & 16 & Truncated Unsalted 16-bit Hash of Entire Authenticating Key \\ \hline
 				\multirow{4}{*}{Payload Type} & \multirow{4}{*}{2} & 0 - Public Key, AES Decryption Key, or Hash Path End \\
-				& & 1 - Authenticating cipher text derived from the Authenticating Key \\ 
+				& & 1 - Authenticating psuedorandom data derived from the Authenticating Key \\ 
 				& & 2 - Spare \\ 
 				& & 3 - Core Constellation Broadcast Ephemerides Authentication \\ \hline
-				Payload Page Number & 4 & The Ordered Section of Germane cipher text - max 16 with 4 bits\\ \hline
+				Payload Segment Number & 4 & The ordered segment number of Germane authenticating psuedorandom data - max 16 with 4 bits\\ \hline
 				Parity Bit & 1 & Parity bit for a compressed public key \\ \hline
 				Spare & 10 & Additional features possible discussed in Section~\ref{sub:metadata_design} \\ \hline
 				Sum Total & 88 & \\ \hline
@@ -343,56 +343,56 @@
 			\label{tab: meta-data}
 		\end{table}
 
-		For MT51-A, the total OTAR payload, see Table~\ref{tab: ciphertext lengths}, is divided into ten 211-bit chunks forming ten unique MT51s that must be broadcast repeatedly.
-		Each of the ten pay loads is pseudorandom, and therefore indistinguishable, requiring each payload be received with a page number.
+		For MT51-A, the total OTAR payload Segment, see Table~\ref{tab: psuedorandom lengths}, is divided into ten 211-bit chunks forming ten unique MT51s that must be broadcast repeatedly.
+		Each of the ten pay loads is pseudorandom, and therefore indistinguishable, requiring each payload be received with a segment number.
 		For smooth operation for receivers when rotating keys after expiration, the next set of MT51s must also be broadcast repeatedly before their actual use.
-		For MT51-A, this leaves 5-bits to distinguish 20 pages (rounded up).
-		These 20 pages are extremely rigid.
-		Since no information beyond page numbers is sent by Provider, this rigidity means that Provider and receivers assume the schedules, expiration, and applicability of keys.
-		The OTAR Payloads aggregate to form all necessary OTAR data in a fixed order with a fixed applicability.
+		For MT51-A, this leaves 5-bits to distinguish 20 segments (rounded up).
+		These 20 OTAR Payload Segments are extremely rigid.
+		Since no information beyond segment numbers is sent by Provider, this rigidity means that Provider and receivers assume the schedules, expiration, and applicability of keys.
+		The OTAR Payload Segments aggregate to form all necessary OTAR data in a fixed order with a fixed applicability.
 		
 		For MT51-B, the payload section is only 128-bits, leaving 88-bits for metadata that describes how a receiver should interpret the 128-bit payload.
 		The larger 88-bits allows for additional features, such as parallel and redundant key management and other features explained later.
-		For concreteness, Table~\ref{tab: mt51-set} provides an example set of unique MT51-B messages (each containing 128-bits per page) that form an Authentication Stack (Authentication Stack is defined in Section~\ref{sub:procedures}).
+		For concreteness, Table~\ref{tab: mt51-set} provides an example set of unique MT51-B messages (each containing an 128-bit segment per message) that form an Authentication Stack (Authentication Stack is defined in Section~\ref{sub:procedures}).
 		To distinguish the key updated with a specific MT51-B and the key used to authenticate that MT51, we call the key associated with the MT51-delivered payload the Germane Key and the key used to authenticate that delivered payload the Authenticating Key.
 		The metadata specifies the following, matching the order of Table~\ref{tab: meta-data}.
 		First, the metadata specifies which system the German Key applies to;
 		second, whether the payload is either an ECDSA public key, an AES decryption key for an ECDSA public key, or a TESLA Hash Path End;
-		third, a 16-bit hash of the entire Germane Key so that the receiver can immediately associate the payload page with a specific key;
+		third, a 16-bit hash of the entire Germane Key so that the receiver can immediately associate the OTAR Payload Segment with a specific key;
 		fourth, the expiration time of the Germane Key;
-		fifth, a 16-bit hash of the entire authenticating key so that the receiver can immediately associate the authenticating ciphertext OTAR Payload page with a specific authenticating key;
+		fifth, a 16-bit hash of the entire authenticating key so that the receiver can immediately associate the authenticating psuedorandom data OTAR Payload Segment with a specific authenticating key;
 		sixth, whether the payload itself is a key or authentication signature;
-		seventh, the page number of the authenticating ciphertext so that the receiver can piece together all the authenticating ciphertext pages over time.
+		seventh, the segment number of the authenticating psuedorandom data so that the receiver can piece together all the authenticating psuedorandom data segments over time.
 
 		\begin{table}%\label{tab: mt51-set}
 			\center
 			\begin{tabular}{|c|l|} \hline
-				Unique MT51-B Number & OTAR Payload Content \\ \hline
+				Unique MT51-B Number & OTAR Payload Segment Content \\ \hline
 				1 & AES-128 Key to decrypt receiver-stored Level-1 ECDSA Public Key \\ \hline
-				2 & ECDSA Level-2 Public Key, Page 1 \\ \hline
-				3 & ECDSA Level-2 Public Key, Page 2 \\ \hline
-				4 & ECDSA Level-1 Signature of ECDSA Level-2 Public Key, Page 1 \\ \hline
-				5 & ECDSA Level-1 Signature of ECDSA Level-2 Public Key, Page 2 \\ \hline
+				2 & ECDSA Level-2 Public Key, Segment 1 \\ \hline
+				3 & ECDSA Level-2 Public Key, Segment 2 \\ \hline
+				4 & ECDSA Level-1 Signature of ECDSA Level-2 Public Key, Segment 1 \\ \hline
+				5 & ECDSA Level-1 Signature of ECDSA Level-2 Public Key, Segment 2 \\ \hline
 				$\vdots$ & \vdots \\ \hline
-				11 & ECDSA Level-1 Signature of ECDSA Level-2 Public Key, Page 8 \\ \hline
+				11 & ECDSA Level-1 Signature of ECDSA Level-2 Public Key, Segment 8 \\ \hline
 				12 & TESLA Hash Path End \\ \hline
-				13 & ECDSA Level-2 Signature of TESLA Hash Path End, Page 1 \\ \hline
-				14 & ECDSA Level-2 Signature of TESLA Hash Path End, Page 2 \\ \hline
-				15 & ECDSA Level-2 Signature of TESLA Hash Path End, Page 3 \\ \hline
-				16 & ECDSA Level-2 Signature of TESLA Hash Path End, Page 4 \\ \hline
+				13 & ECDSA Level-2 Signature of TESLA Hash Path End, Segment 1 \\ \hline
+				14 & ECDSA Level-2 Signature of TESLA Hash Path End, Segment 2 \\ \hline
+				15 & ECDSA Level-2 Signature of TESLA Hash Path End, Segment 3 \\ \hline
+				16 & ECDSA Level-2 Signature of TESLA Hash Path End, Segment 4 \\ \hline
 			\end{tabular}
 			\caption{
 				List of all the unique MT51-Bs in an example Authentication Stack, defined in Section~\ref{sub:procedures}.
 				This set is broadcast repeatedly by Provider for cold-start receivers.
 				A receiver must receive all of the unique MT51s to start authentication.
-				For MT51-A, the information is not divided evenly among the pages, but since there is more OTAR Payload bits, the number of pages is smaller. 
+				For MT51-A, the information is not divided evenly among the segments, but since there is more OTAR Payload Segment bits per message, the number of segments is smaller. 
 			}
 			\label{tab: mt51-set}
 		\end{table}
 
 		The signatures to authenticate a particular key must derive from the entire set of full MT51 messages used to deliver them.
-		The metadata associated with an authenticating ciphertext includes the expiration time.
-		These keys are only secure for specific lengths of time, as described in Section~\ref{sub:ecdsa_key_structure} and~\ref{sub:tesla_hash_path}; hence, the expiration time must be authenticated together with the corresponding authenticating ciphertext so that each key is retired securely.
+		The metadata associated with authenticating psuedorandom data includes the expiration time.
+		These keys are only secure for specific lengths of time, as described in Section~\ref{sub:ecdsa_key_structure} and~\ref{sub:tesla_hash_path}; hence, the expiration time must be authenticated together with the corresponding authenticating psuedorandom data so that each key is retired securely.
 		After the expiration of a particular key, receivers must reject messages signed with that expired key.
 
 	\subsection{Procedures} \label{sub:procedures}
@@ -403,8 +403,8 @@
 		Algorithm~\ref{alg: TESLA receiver} captures how a receiver should operate starting from a cold start, including specifying some of the onboard data structures that should be used to track key maintenance.
 		Upon cold start, a receiver must listen to and record incoming SBAS messages.
 		A receiver should not use any unauthenticated data.
-		Therefore, it must listen to the incoming MT51 messages until it has received a complete set of unexpired Level-1 ECDSA public key, Level-2 ECDSA public key, TESLA Hash Path End, and the associated authenticating ciphertext signatures (together, the ``Authentication Stack'').
-		The receiver must listen and store MT51 messages until the aggregate OTAR Payloads of  authenticating ciphertext produces a successful ECDSA authentication of the entire Authentication Stack: level-1 key onto a level-2 key and that level-2 key onto the Hash Path End.
+		Therefore, it must listen to the incoming MT51 messages until it has received a complete set of unexpired Level-1 ECDSA public key, Level-2 ECDSA public key, TESLA Hash Path End, and the associated signatures (together, the ``Authentication Stack'').
+		The receiver must listen and store MT51 messages until the aggregate OTAR Payloads of  authenticating psuedorandom data produces a successful ECDSA authentication of the entire Authentication Stack: level-1 key onto a level-2 key and that level-2 key onto the Hash Path End.
 		Without receiving and verifying the entire set of unique MT51s to complete receipt of the Authentication Stack, the receiver cannot assert an authenticated fix and must ignore the SBAS data derived from the incoming messages.
 		Once the Authentication Stack is received and verified via ECDSA, it can now process and authenticate MT50 messages via TESLA.
 		Then it can associate the MT50-delivered HMACs to messages to authenticate and process the SBAS navigation data.
@@ -447,12 +447,12 @@
 			\caption{Receiver Procedures for Single Satellite, Single Frequency Authenticated Message Distribution with TESLA.}
 			\label{alg: TESLA receiver}
 			\While{on}{
-				Receive MT51-B payload pages associated via the MT51-B metadata and store into three hash tables $H_1$, $H_2$, and $H_3$. 
+				Receive MT51-B payload segments associated via the MT51-B metadata and store into three hash tables $H_1$, $H_2$, and $H_3$. 
 				$H_1$ holds data for level-1 ECDSA keys. 
 				$H_2$ holds data for level-2 ECDSA keys and associated level-1 signatures on those keys.
 				$H_3$ holds data for TESLA Hash Path Ends $p^P_{n+1}$ and associated level-2 signatures on those Hash Path Ends.
 				Each element in the Hash Tables store metadata such as the key expiration time and the relevant higher-level authenticating key.\;
-				Await receipt of all needed unique MT51-B pages, called the Authentication Stack, to assert authenticated Hash Path Ends.
+				Await receipt of all needed unique MT51-B OTAR Payload Segments, called the Authentication Stack, to assert authenticated Hash Path Ends.
 				A Hash Path End element $p^P_{n+1}$ stored in $H_3$ is authenticated if itself and signature are ECDSA verified by an authenticated element in $H_2$.
 				A public ECDSA key element stored in $H_2$ is authenticated if itself and signature data are ECDSA verified by an authenticated element in $H_1$.
 				A public ECDSA key element stored in $H_1$ is authenticated if it was prestored from the CA.
@@ -493,7 +493,7 @@
 			Different keys can authenticate different keys.
 			For MT51-B, the receiver must check that the TESLA Hash Path End is signed correctly by the {\em metadata-specified} level-2 key and so on from level-2 to level-1. 
 			For MT51-A, there is exactly one key of each level, so either the ten payloads aggregate to make a consistent Authentication Stack, or they do not.
-			The receiver will simply aggregate the pages for a a complete authentication stack in an order specified by provider, such as TESLA Hash Path End || ECDSA Level-2 Authentication of TESLA Hash Path End || ECDSA Level-2 Key || ECDSA $\cdots$.
+			The receiver will simply aggregate the OTAR Payload Segments for a a complete authentication stack in an order specified by provider, such as TESLA Hash Path End || ECDSA Level-2 Authentication of TESLA Hash Path End || ECDSA Level-2 Key || ECDSA $\cdots$.
 
 \section{TESLA Design Methodology} \label{sec:tesla_design_methodology}
 
@@ -515,8 +515,8 @@
 
 	\subsection{TESLA Efficiency} \label{sub:tesla_efficiency}
 
-		The authentication ciphertext bits required to OTAR a Hash Path do not increase with Hash Path length.
-		While a complete OTAR requires a daunting 2048 bits, see Table~\ref{tab: ciphertext lengths}, the bits do not scale with Hash Path length since Provider sends only a Hash Path End authenticated with ECDSA.
+		The authenticating psuedorandom data bits required to OTAR a Hash Path do not increase with Hash Path length.
+		While a complete OTAR requires a daunting 2048 bits, see Table~\ref{tab: psuedorandom lengths}, the bits do not scale with Hash Path length since Provider sends only a Hash Path End authenticated with ECDSA.
 		If Provider finds the overhead required to OTAR a Hash Path too burdensome on the schedule, Provider can increase the Hash Path's length and decrease the OTAR transmission frequency.
 		Increasing the Hash Path length requires Provider to compute a longer Hash Path per OTAR and receivers to hash more in the event of cold start, but this burden is negligible as commodity hardware can compute Hash Paths on the lengths specified in this work in seconds, see Section~\ref{sub:procedures}.
 		At a 128-bit Hash Point length, a Hash Path length on the order of decades is safe from attack \cite{Neish_Dissertation}.
@@ -589,7 +589,7 @@
 			We propose using an analog: the integer time of message sending and arrival.
 			Sending and arrival times, rounded down to the nearest integer, are the same for Provider and receiver, since messages are sent each second and transmission time-of-flight is less than a second.
 			Using the time, instead of the integer number of points from the Hash Path start, provides several advantages.
-			Upon start, a receiver knows how to verify a Hash Point since Equation~\eqref{eq: hash path} is only a function of current integer time and the ECDSA authenticating ciphertext.
+			Upon start, a receiver knows how to verify a Hash Point since Equation~\eqref{eq: hash path} is only a function of current integer time and the ECDSA authenticating psuedorandom data.
 			Moreover, it allows the switching of Hash Paths to occur on a non-rigid schedule, which aids with security as well \cite{chain-security}.
 			While we specify a week interval, and it would be natural to have a new Hash Path begin at the beginning of a GNSS week, Provider need not communicate the start and length of Hash Paths as overhead or metadata for a non-rigid schedule because of the hashing properties of the Hash Point.
 			If Provider were to switch Hash Paths arbitrarily, there is a constant-time complexity for the receiver to check if a new Hash Point hashes to the current Hash Path or a new one, as seen in Algorithm~\ref{alg: TESLA receiver}.
@@ -670,17 +670,17 @@
 
 	The proposed design of MT51-B is fundamentally {\em modular}.
 	The design of MT51-B serves only to deliver pseudorandom data so that its use can be flexible and recycled among different OTAR designs and applications that require delivery of pseudorandom data such as keys, signatures, and Hash Points. 
-	Its purpose is to deliver large chunks of pseudorandom data to maintain the SBAS authentication scheme and the associated metadata on how the receiver should interpret that ciphertext.
-	The same message definition delivers TESLA Hash Path Ends, level-2 keys, level-1-key decryption keys, and the authenticating ciphertext required to authenticate each.
+	Its purpose is to deliver large chunks of pseudorandom data to maintain the SBAS authentication scheme and the associated metadata on how the receiver should interpret that authenticating psuedorandom data.
+	The same message definition delivers TESLA Hash Path Ends, level-2 keys, level-1-key decryption keys, and the authenticating psuedorandom data required to authenticate each.
 
 	Our choice to allow 128-bits per MT51-B serves several purposes.
 	We select 128 and 256-bit security level ECDSA keys since there exist standardized, secure elliptic curves at those security levels, and they are each divisible by 128.
 	The public keys and derived signatures are twice and four times the security level length, respectively.
-	These quantities are divisible by 128, meaning that there will be integer numbers of OTAR Payload pages without wasted zero padding.
-	Table~\ref{tab: ciphertext lengths} shows how many messages are required to OTAR each of the key levels.
+	These quantities are divisible by 128, meaning that there will be integer numbers of OTAR Payload Segments without wasted zero padding.
+	Table~\ref{tab: psuedorandom lengths} shows how many messages are required to OTAR each of the key levels.
 	Our selection could be modified to use the 192-bit level without modifying our scheme, since all of the 192-bit level data is also divisible by 128.
 	The design is agnostic to the asymmetric scheme and is recycled for OTAR of the Hash Path Ends, expanding its use to the entire scheme's maintenance, not just the asymmetric portion.
-	The proposed MT51-B standard would require no changes if a more efficient ciphertext scheme (e.g., EC-Schnorr), a quantum-secure scheme, or a different security level replaced the proposed asymmetric authentication scheme.
+	The proposed MT51-B standard would require no changes if a more efficient authentication scheme (e.g., EC-Schnorr), a quantum-secure scheme, or a different security level replaced the proposed asymmetric authentication scheme.
 	The modular design also allows easy expansion of additional features described in Sections~\ref{sub:metadata_design} and~\ref{sub:core_eph} that may desirable to SBAS stakeholders.
 		\begin{table}[H]
 		\center
@@ -690,14 +690,14 @@
 			    2 & 128 & 256 & 1280 & 10\\ \hline
 			TESLA & 128 & 128 &  640 & 5 \\ \hline
 		\end{tabular}
-		\caption{Table that delineates the number of MT51-Bs required to complete a single OTAR for a specific key. Level-1 keys require only the 128-bit AES decryption key, hence a single MT51-B. Level-2 keys require 256-bit key, and 1024 bits of authenticating ciphertext (twice the Level-1 public key length), hence 1280 bits and 10 MT51-Bs. TESLA Hash Path Ends require 128-bit Hash Point and 512 bits of authenticating ciphertext (twice the level-2 public key length), hence 640 bits and 5 MT51-Bs. Each MT51-B unique page is required to OTAR.}
-		\label{tab: ciphertext lengths}
+		\caption{Table that delineates the number of MT51-Bs required to complete a single OTAR for a specific key. Level-1 keys require only the 128-bit AES decryption key, hence a single MT51-B. Level-2 keys require 256-bit key, and 1024 bits of authenticating psuedorandom data (twice the Level-1 public key length), hence 1280 bits and 10 MT51-Bs. TESLA Hash Path Ends require 128-bit Hash Point and 512 bits of authenticating psuedorandom data (twice the level-2 public key length), hence 640 bits and 5 MT51-Bs. Each unique MT51-B is required to OTAR.}
+		\label{tab: psuedorandom lengths}
 	\end{table}
 
 	MT50 and MT51 are agnostic to the asymmetric cryptographic security scheme and hash function primitives.
 	When the security of a primitive becomes compromised, the SBAS MT scheme need not change.
 	Providers and receivers will have to change the primitives used modularly.
-	Since MT51-B provides 128-bits of ciphertext per message, and standardized cryptographic primitive lengths are, generally, integer factors of 128, changes to the scheme would increase or decrease the number of pages required to transmit information.
+	Since MT51-B provides 128-bits of authenticating pseudorandom data per message, and standardized cryptographic primitive lengths are, generally, integer factors of 128, changes to the scheme would increase or decrease the number of segments required to transmit information.
 	If the security of the 128-bit truncated SHA-256 is ever compromised, SBAS could double the Hash Point length space without affecting the MT50 frequency as follows.
 	Suppose the Hash Point space is the set of 256-bit integers, like the untruncated SHA-256.
 	Each MT50 will transmit half of a Hash Point, and each HMAC key will derive from two consecutive MT50 messages.
@@ -705,7 +705,7 @@
 
 	\subsection{Metadata Design} \label{sub:metadata_design}
 
-		Within the ciphertext metadata, we specify the inclusion of a Germane and Authenticating Key hash.
+		Within the authenticating psuedorandom data metadata, we specify the inclusion of a Germane and Authenticating Key hash.
 		Since the payload is pseudorandom, metadata must exist so that the receiver to associate the unique MT51-B payloads.
 		Any identifying feature would suffice, such as the ordered key number, rolling over every $2^{16} = 65536$ keys.
 		However, the use of hash on the entire key provides additional features.
@@ -724,20 +724,20 @@
 		At a minimum, SBAS Providers could broadcast adjacent SBAS Providers' keys.
 		Without this feature, when an aircraft enters a new SBAS service volume the first time of the week (or 10 or 100 weeks), it must act as a cold-start receiver liable to the amount of time required to get the Authentication Stack, as specified in Section~\ref{sub:mt51_schedule_frequency}.
 
-		Spare bits in the ciphertext metadata could accommodate other features.
+		Spare bits in the authenticating psuedorandom data metadata could accommodate other features.
 		These include scheme hyperparameters, such as the choice of a hash function or key or HMAC length.
 		MT51-B messages could authenticate specific messages, identified by 16-bit hashes, immediately with ECDSA.
 		If keys are ever compromised, MT51-B could also disseminate key revocations.
 		A revocation MT51-B would include eight 16-bit hashes of the affected keys and would only need to be broadcast until the keys are retired under standard procedure.
 		Since each broadcast of an MT51-B is accompanied by a germane expiration time, Provider can arbitrarily shorten the applicability of a particular key by rebroadcasting the MT51-B with a different expiration time, noting the assumption that receivers actually receive that updated broadcast and that the Hash Path salt is not disrupted, see Section~\ref{subsub:ecdsa_salt}. 
 		If Provider can re-sign data, the metadata must include a parameter that identifies that particular authentication.
-		This is because without the germane key hash, authenticating key hash, page number, and authentication instance number, each page of data cannot be associated because they are pseudorandom.
+		This is because without the germane key hash, authenticating key hash, segment number, and authentication instance number, each segment of psuedorandom data cannot be associated because they are pseudorandom.
 		Furthermore, MT51-B could manage other authentication schemes, such as an authentication scheme adopted by GNSS, see Section~\ref{sub:core_eph}.
 		A GNSS authentication, especially one built on TESLA, would save bandwidth by deferring the GNSS scheme's maintenance to SBAS.
 
 		There are many features that the scheme's modularity can accommodate; however, if SBAS stakeholders do not want any of these features, then the spare meta bits could also be used to aid in resistance to message loss.
 		Providers could add redundant HMACS to the MT51-B message to redundantly authenticate messages to alleviate MT50 message loss.
-		Moreover, the delivery of 128-bits of authenticating ciphertext could be augmented with fountain codes \cite{gnss_fountain_codes}.
+		Moreover, the delivery of 128-bits of authenticating psuedorandom data could be augmented with fountain codes \cite{gnss_fountain_codes}.
 		Fountain Codes (1) increase the reliability of delivering MT51 messages and (2) decrease the number of transmitted messages required for an authenticated first fix.
 		The selection of 128-bits aids in the scheme's efficiency since all the data is integrally divisible by 128.
 		Special care can ensure that using fountain codes in the spare bits to augment those 128-bits would not change the integrally divisible property and maintain efficiency.
@@ -748,7 +748,7 @@
 		Another feature accessible with this schemes modularity is authenticating navigation messages from GNSS systems.
 		GNSS data messages have limited bandwidth and must maintain backward compatibility.
 		MT51-B provides a natural pathway to authenticate GNSS data with the 128-bit payload and spare meta-data bits.
-		Table~\ref{tab: meta-data} already provides the required metadata designations: (1) the germane core constellation system, (2) the ciphertext type, and (3) the authenticating ciphertext page number.
+		Table~\ref{tab: meta-data} already provides the required metadata designations: (1) the germane core constellation system, (2) the type of authenticating psuedorandom data, and (3) the authenticating psuedorandom data segment number.
 		However, the payload should be modified to accommodate the realistic operation.
 
 		One could use a single MT51-B payload to authenticate the entire set of ephemerides with a single 128-bit HMAC; however, this would not work for realistic receivers.
@@ -779,13 +779,13 @@
 		Equations~\eqref{eq: ephemerides key} and~\eqref{eq: ephemerides signature} use the sending time $t_j$, the SBAS PRN and frequency, and the core constellation satellite vehicle number.
 
 		SBAS could authenticate the broadcast ephemerides of every satellite globally, and the receiver can draw from the entire set of HMACs the few in view of the receiver.
-		The metadata page number informs the receiver from which set of eight satellites the HMACs derive.
+		The metadata segment number informs the receiver from which set of eight satellites the HMACs derive.
 		For GPS, this would mean four of these MT51-Bs.
 		However, MT1 and MT31 already provide an issues-of-data mask of the 92-most relevant satellites currently under correction of a particular SBAS.
 		Therefore, we propose that the order of the eight HMACs correspond to the order prescribed in the issues of data already provided to the receiver.
-		The issue of data index, either the IODP or IODM, must be placed in the unused sections of the metadata, and the metadata page field would determine the relevant eight, in order, among the set of 92.
+		The issue of data index, either the IODP or IODM, must be placed in the unused sections of the metadata, and the metadata segment number field would determine the relevant eight, in order, among the set of 92.
 		Since the issue of data index requires only two bits, SBAS could use the unused German Key Hash, German Key Expiration, and Authenticating Key Hash to send 12 HMACs per MT51-B.
-		Alternatively, one could define a new message type that delivers 13 HMACs, the issue of data index, and the page number.
+		Alternatively, one could define a new message type that delivers 13 HMACs, the issue of data index, and the segment number.
 
 	\subsection{MT50 Redundant Authentication} \label{sub:mt50_redundant_authentication}
 
@@ -793,7 +793,7 @@
 		Upon receipt of the entire Authentication Stack, the receiver can assert authenticity to the level-1 key maintained by CA.
 		However, the MT51 messages are among the SBAS messages authenticated via TESLA and MT50.
 		If the receiver has an ECDSA-verified Authentication Stack, which can authenticate the bulk of SBAS messages via MT50, the receiver can use TESLA to verify the next Authentication Stack when delivered via MT51.
-		Concretely, a receiver can assert the authenticity of the next Hash Path End without awaiting the associated authenticating ciphertext since an HMAC in the following MT50 will assert authenticity down to the current Hash Path End through the current level-1 key.
+		Concretely, a receiver can assert the authenticity of the next Hash Path End without awaiting the associated authenticating psuedorandom data since an HMAC in the following MT50 will assert authenticity down to the current Hash Path End through the current level-1 key.
 		In Section~\ref{sub:mt51_schedule_frequency}, we suggest that the next Authentication Stack be rebroadcasted each hour.
 		The ECDSA-based and TESLA-based authentication of the next Authentication Stack is redundant to a receiver with an authenticated fix.
 		Therefore, an argument can be made that is the hour-long frequency to broadcast the next Authentication Stack does not add to the scheme.
@@ -809,7 +809,7 @@
 		However,  any choice must meet minimum security requirements associated with the required computational time to guess the keys exhaustively.
 		Upon cold receiver startup, we desire that the TFAF be reasonably short.
 		Therefore, the Authentication Stack must be sent periodically over their use.
-		From Table~\ref{tab: ciphertext lengths}, a complete Authentication Stack requires 16 MT51s. 
+		From Table~\ref{tab: psuedorandom lengths}, a complete Authentication Stack requires 16 MT51s. 
 		We propose that Provider broadcast the current Authentication Stack every 5 minutes so that a cold-start receiver achieves the first authenticated fix in 5 minutes, assuming no message loss.
 		This requirement would require that a message from the set of 16 unique MT51-Bs be transmitted 1 out of every 18 messages, rounded up.
 		With multiple geostationary satellites and frequencies, the satellites can broadcast the unique MT51s out of phase to decrease the authenticated first fix time as mentioned in Section~\ref{sub:tesla_efficiency}.
