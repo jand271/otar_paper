@@ -171,7 +171,7 @@
 	MT51 is used to (1) authenticate the Hash Path Ends via ECDSA as Provider uses series of Hash Paths in its standard operation, and (2) to provide OTAR and perform system-level maintenance of the cryptographic authentication scheme.
 	Here follows in this Section~\ref{sec:sbas_authentication_scheme_definition} precise definitions of our proposed SBAS authentication scheme.
 	Sections~\ref{sec:tesla_design_methodology} and~\ref{sec:otar_design_methodology} provides explanations and reasoning for our proposed definitions.
-	While the definitions presented here are for the L5 signal, given the spare bits remaining in each definition, this scheme will also work for the L1 signal by modifying the preambles.
+	While the definitions presented here are for the L5 signal, given the spare bits remaining in each definition, this scheme will also work for the L1 signal by modifying the preambles (noted with reserved bits in definitions).
 
 	\subsection{ECDSA Key Structure} \label{sub:ecdsa_key_structure}
 
@@ -246,9 +246,9 @@
 
 		\begin{table}%\label{tab: mt50}
 			\center
-			\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \hline
-				Preamble & MT & HMAC1 & HMAC2 & HMAC3 & HMAC4 & HMAC5 & Hash Point & Spare & CRC \\ \hline
-				4 & 6 & 16 & 16 & 16 & 16 & 16 & 128 & 8 & 24 \\ \hline
+			\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
+				Preamble & Reserved & MT & HMAC1 & HMAC2 & HMAC3 & HMAC4 & HMAC5 & Hash Point & Spare & CRC \\ \hline
+				4 & 4 & 6 & 16 & 16 & 16 & 16 & 16 & 128 & 4 & 24 \\ \hline
 			\end{tabular}
 			\caption{Bit Allocation for proposed MT50. Per SBAS definitions, there are 250 bits per message.}
 			\label{tab: mt50}
@@ -293,10 +293,10 @@
 
 		\begin{table}%\label{tab: mt51-a}
 				\center
-				\begin{tabular}{|c|c|c|c|c|} \hline
-				\multicolumn{5}{|c|}{MT51-A Bit Allocation} \\ \hline
-					Preamble & MT & Segment Number & OTAR Segment & CRC \\ \hline
-					4 & 6 & 5 & 211 & 24 \\ \hline
+				\begin{tabular}{|c|c|c|c|c|c|} \hline
+				\multicolumn{6}{|c|}{MT51-A Bit Allocation} \\ \hline
+					Preamble & Reserved & MT & Segment Number & OTAR Segment & CRC \\ \hline
+					4 & 4 & 6 & 5 & 207 & 24 \\ \hline
 				\end{tabular}
 				\caption{
 					Bit allocation proposed for MT51-A at 250 bits per message. 
@@ -308,10 +308,10 @@
 
 		\begin{table}%\label{tab: mt51-b}
 			\center
-			\begin{tabular}{|c|c|c|c|c|} \hline
-				\multicolumn{5}{|c|}{MT51-B Bit Allocation} \\ \hline
-				Preamble & MT & Payload Metadata & OTAR Payload Segment & CRC \\ \hline
-				4 & 6 & 88 & 128 & 24 \\ \hline
+			\begin{tabular}{|c|c|c|c|c|c|c|} \hline
+				\multicolumn{6}{|c|}{MT51-B Bit Allocation} \\ \hline
+				Preamble & Reserved & MT & Payload Metadata & OTAR Payload Segment & CRC \\ \hline
+				4 & 4 & 6 & 84 & 128 & 24 \\ \hline
 			\end{tabular}
 			\caption{
 				Bit allocation proposed for MT51-B at 250 bits per message. 
@@ -340,14 +340,14 @@
 				& & 3 - Core Constellation Broadcast Ephemerides Authentication \\ \hline
 				Payload Segment Number & 4 & The ordered segment number of Germane authenticating psuedorandom data \\ \hline
 				Parity Bit & 1 & Parity bit for a compressed public key \\ \hline
-				Spare & 10 & Additional features possible discussed in Section~\ref{sub:metadata_design} \\ \hline
-				Sum Total & 88 & \\ \hline
+				Spare & 6 & Additional features possible discussed in Section~\ref{sub:metadata_design} \\ \hline
+				Sum Total & 84 & \\ \hline
 			\end{tabular}
 			\caption{Bit allocation of payload metadata. To distinguish the key updated with a specific MT51-B and the key used to authenticate that MT51-B, we call the key associated with the MT51-B-delivered payload the Germane Key and the key used to authenticate that delivered key the Authenticating Key.}
 			\label{tab: meta-data}
 		\end{table}
 
-		For MT51-A, the total OTAR payload Segment, see Table~\ref{tab: psuedorandom lengths}, is divided into ten 211-bit chunks forming ten unique MT51s that must be broadcast repeatedly.
+		For MT51-A, the total OTAR payload Segment, see Table~\ref{tab: psuedorandom lengths}, is divided into ten 207-bit chunks forming ten unique MT51s that must be broadcast repeatedly.
 		Each of the ten pay loads is pseudorandom, and therefore indistinguishable, requiring each payload be received with a segment number.
 		For smooth operation for receivers when rotating keys after expiration, the next set of MT51s must also be broadcast repeatedly before their actual use.
 		For MT51-A, this leaves 5-bits to distinguish 20 segments (rounded up).
@@ -355,8 +355,8 @@
 		Since no information beyond segment numbers is sent by Provider, this rigidity means that Provider and receivers assume the schedules, expiration, and applicability of keys.
 		The OTAR Payload Segments aggregate to form all necessary OTAR data in a fixed order with a fixed applicability.
 		
-		For MT51-B, the payload section is only 128-bits, leaving 88-bits for metadata that describes how a receiver should interpret the 128-bit payload.
-		The larger 88-bits allows for additional features, such as parallel and redundant key management and other features explained later.
+		For MT51-B, the payload section is only 128-bits, leaving 84-bits for metadata that describes how a receiver should interpret the 128-bit payload.
+		The larger 84-bits allows for additional features, such as parallel and redundant key management and other features explained later.
 		For concreteness, Table~\ref{tab: mt51-set} provides an example set of unique MT51-B messages (each containing an 128-bit segment per message) that form an Authentication Stack (Authentication Stack is defined in Section~\ref{sub:procedures}).
 		To distinguish the key updated with a specific MT51-B and the key used to authenticate that MT51, we call the key associated with the MT51-delivered payload the Germane Key and the key used to authenticate that delivered payload the Authenticating Key.
 		The metadata specifies the following, matching the order of Table~\ref{tab: meta-data}.
