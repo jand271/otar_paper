@@ -238,7 +238,7 @@
 		Provider will send an MT50 at a cadence of every six messages.
 		The delayed key release to authenticate messages means that messages will be authenticated between 7 and 11 seconds after their broadcast.
 		Provider will set the cadence of integrity messages to always immediately proceed MT50s to minimize integrity message authentication time.
-		If the receiver is not able to authenticate a message because of a lost MT50, it disregards that message.
+		If the receiver is not able to authenticate a message because of a lost MT50, it generally disregards that message (messages that inform receivers to decrease the level or trust or to not use the service do not need to be disregarded).
 		Within the message definition, there are five 16-bit HMACs and one 128-bit Hash Point.
 		At the receiver receipt of an MT50, the included five HMACs correspond to the previous messages with a secret Hash Point known only to Provider at message sending time.
 		The included 128-bit Hash Point corresponds to the HMACS included in the {\em previous} MT50 message sent 6 seconds earlier.
@@ -247,8 +247,8 @@
 		\begin{table}%\label{tab: mt50}
 			\center
 			\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|} \hline
-				Preamble & Reserved & MT & HMAC1 & HMAC2 & HMAC3 & HMAC4 & HMAC5 & Hash Point & Spare & CRC \\ \hline
-				4 & 4 & 6 & 16 & 16 & 16 & 16 & 16 & 128 & 4 & 24 \\ \hline
+				Preamble & MT & Reserved & HMAC1 & HMAC2 & HMAC3 & HMAC4 & HMAC5 & Hash Point & Spare & CRC \\ \hline
+				4 & 6 & 4 & 16 & 16 & 16 & 16 & 16 & 128 & 4 & 24 \\ \hline
 			\end{tabular}
 			\caption{Bit Allocation for proposed MT50. Per SBAS definitions, there are 250 bits per message.}
 			\label{tab: mt50}
@@ -272,9 +272,9 @@
 	\subsection{MT51} \label{sub:mt51}
 
 		In this work, we provide two MT51 definitions: MT51-A and MT51-B.
-		The A and B versions represent opposite ends of a spectrum that a final MT51 would lie.
+		The A and B versions represent opposite ends of a spectrum on which a final MT51 would lie.
 		MT51-A and MT51-B are alternatives to each other, i.e., they would not be used by Provider simultaneously in the same SBAS.
-		The difference between MT51-A and MT51-B is the amount of bits devoted to (1) the OTAR Payload Segment and (2) meta-data describing how to interpret the OTAR Payload Segment of a particular MT51.
+		The difference between MT51-A and MT51-B is bits devoted to (1) the OTAR Payload Segment and (2) meta-data describing how to interpret the OTAR Payload Segment of a particular MT51.
 		MT51-A is bare bones and featureless; whereas, MT51-B contains features that could be relevant to the SBAS stakeholders.
 		We refrain from specifying which features should be incorporated, deferring until all SBAS stakeholders have had their considerations heard.
 		If SBAS stakeholders do not care for the additional features described later with MT51-B, then the final design should be MT51-A.
@@ -285,7 +285,7 @@
 		Since MT51-A has less meta-data, more message data is dedicated to the OTAR Payload Segment, decreasing the number of unique MT51s required to OTAR.
 		Since less messages are required to OTAR with MT51-A, we expect better continuity, availability, and TFAF results.
 		We will show that feature-rich MT51-B is able to meet our requirements and not burden the SBAS schedule.
-		Since MT51-B already meets our KPIs and given the academic context of this work, we focus on MT51-B to study the feature potential to SBAS stakeholders.
+		Since MT51-B already meets the KPIs and given the academic context of this work, we focus on MT51-B to study the feature potential to SBAS stakeholders.
 		
 		Table~\ref{tab: mt51-a} provides our proposed definition of MT51-A with bit allocations, and Tables~\ref{tab: mt51-b}~and~\ref{tab: meta-data} together provide our proposed definition of MT51-B with bit allocations.
 		Provider must broadcast MT51 messages approximately every 1 in 30 messages for MT51-A and every 1 in 18 messages for MT51-B, see Section~\ref{sub:mt51_schedule_frequency}.
@@ -295,8 +295,8 @@
 				\center
 				\begin{tabular}{|c|c|c|c|c|c|} \hline
 				\multicolumn{6}{|c|}{MT51-A Bit Allocation} \\ \hline
-					Preamble & Reserved & MT & Segment Number & OTAR Segment & CRC \\ \hline
-					4 & 4 & 6 & 5 & 207 & 24 \\ \hline
+					Preamble & MT & Reserved & Segment Number & OTAR Segment & CRC \\ \hline
+					4 & 6 & 4 & 5 & 207 & 24 \\ \hline
 				\end{tabular}
 				\caption{
 					Bit allocation proposed for MT51-A at 250 bits per message. 
@@ -310,8 +310,8 @@
 			\center
 			\begin{tabular}{|c|c|c|c|c|c|c|} \hline
 				\multicolumn{6}{|c|}{MT51-B Bit Allocation} \\ \hline
-				Preamble & Reserved & MT & Payload Metadata & OTAR Payload Segment & CRC \\ \hline
-				4 & 4 & 6 & 84 & 128 & 24 \\ \hline
+				Preamble & MT & Reserved & Payload Metadata & OTAR Payload Segment & CRC \\ \hline
+				4 & 6 & 4 & 84 & 128 & 24 \\ \hline
 			\end{tabular}
 			\caption{
 				Bit allocation proposed for MT51-B at 250 bits per message. 
@@ -360,7 +360,7 @@
 		For concreteness, Table~\ref{tab: mt51-set} provides an example set of unique MT51-B messages (each containing an 128-bit segment per message) that form an Authentication Stack (Authentication Stack is defined in Section~\ref{sub:procedures}).
 		To distinguish the key updated with a specific MT51-B and the key used to authenticate that MT51, we call the key associated with the MT51-delivered payload the Germane Key and the key used to authenticate that delivered payload the Authenticating Key.
 		The metadata specifies the following, matching the order of Table~\ref{tab: meta-data}.
-		First, the metadata specifies which system the German Key applies to;
+		First, the metadata specifies which system the Germane Key applies to;
 		second, whether the payload is either an ECDSA public key, an AES decryption key for an ECDSA public key, or a TESLA Hash Path End;
 		third, a 16-bit hash of the entire Germane Key so that the receiver can immediately associate the OTAR Payload Segment with a specific key;
 		fourth, the expiration time of the Germane Key;
@@ -406,20 +406,21 @@
 
 		Algorithm~\ref{alg: TESLA receiver} captures how a receiver should operate starting from a cold start, including specifying some of the onboard data structures that should be used to track key maintenance.
 		Upon cold start, a receiver must listen to and record incoming SBAS messages.
-		A receiver should not use any unauthenticated data.
+		A receiver should not use any unauthenticated data (noting that the complete set of MT51s is self-authenticating).
 		Therefore, it must listen to the incoming MT51 messages until it has received a complete set of unexpired Level-1 ECDSA public key, Level-2 ECDSA public key, TESLA Hash Path End, and the associated signatures (together, the ``Authentication Stack'').
 		The receiver must listen and store MT51 messages until the aggregate OTAR Payloads of  authenticating psuedorandom data produces a successful ECDSA authentication of the entire Authentication Stack: level-1 key onto a level-2 key and that level-2 key onto the Hash Path End.
-		Without receiving and verifying the entire set of unique MT51s to complete receipt of the Authentication Stack, the receiver cannot assert an authenticated fix and must ignore the SBAS data derived from the incoming messages.
+		Without receiving and verifying the entire set of unique MT51s to complete receipt of the Authentication Stack, the receiver cannot assert an authenticated fix and must ignore the SBAS correction and integrity data (i.e., non-MT51 messages) derived from the incoming messages.
 		Once the Authentication Stack is received and verified via ECDSA, it can now process and authenticate MT50 messages via TESLA.
-		Then it can associate the MT50-delivered HMACs to messages to authenticate and process the SBAS navigation data.
+		Then it can associate the MT50-delivered HMACs to messages to authenticate and process the SBAS correction and integrity data.
 		Provider repeatedly broadcasts the current Authentication Stack, see Section~\ref{sub:mt51_schedule_frequency}, to accommodate random receiver startup.
 
-		Algorithms~\ref{alg: TESLA provider} and~\ref{alg: TESLA receiver} are for the single satellite and single frequency case.
-		To augment those algorithms to handle the multiple satellite or multiple frequency case, more than five messages should be signed or verified for each loop iteration.
-		Equations~\eqref{eq: key}~and~\eqref{eq: signature} still apply: there is just more than 5 iterations of each.
+		Algorithms~\ref{alg: TESLA provider} and~\ref{alg: TESLA receiver} delineate only the single satellite and single frequency case.
+		To augment those algorithms to handle the multiple satellite or multiple frequency case, five messages should be signed and verified for each satellite and each frequency, as described with Equations~\eqref{eq: key}~and~\eqref{eq: signature}.
+		This means that the MT51 Authentication Stack is used for all satellites and frequencies, but each message per satellite per frequency gets its own authentication via TESLA.
+		By reusing he same Authentication Stack with all satellites and frequencies, we exploit the scalability of TESLA allowing a smaller TFAF (see Section~\ref{sub:tesla_efficiency}).
 
 		Upon complete receipt of the Authentication Stack, receivers must hash the Hash Point from the most recent MT50 to the MT51-provided Hash Path End.
-		In the special case where the receiver has only been off a short time, turned offline and back online during the use of the same Hash Path, the receiver time-of-first-authenticated is just the time required to hash to the Hash Path End.
+		In the special case where the receiver has only been off a short time, turned offline and back online during the use of the same Hash Path, the receiver TFAF is just the time required to hash to the Hash Path End.
 		The worst-case number of hash computations is the length of the Hash Path (about 100,000) and will occur when a receiver turns on near the expiration of the Hash Path.
 		With standard commodity hardware (i.e., Intel Core i5 Processor), a worst-case time of about 10 seconds happens if the receiver is turned on immediately before a Hash Path expires.
 		We measured this time by experimenting with personal laptops that were not specifically built for this process.
@@ -523,8 +524,10 @@
 		While a complete OTAR requires a daunting 2048 bits, see Table~\ref{tab: psuedorandom lengths}, the bits do not scale with Hash Path length since Provider sends only a Hash Path End authenticated with ECDSA.
 		If Provider finds the overhead required to OTAR a Hash Path too burdensome on the schedule, Provider can increase the Hash Path's length and decrease the OTAR transmission frequency.
 		Increasing the Hash Path length requires Provider to compute a longer Hash Path per OTAR and receivers to hash more in the event of cold start, but this burden is negligible as commodity hardware can compute Hash Paths on the lengths specified in this work in seconds, see Section~\ref{sub:procedures}.
+		Regardless, MT51 can resign Hash Points mid-way through a Hash Path to decrease this burden.
+		For instance, while a Provider could generate week-long Hash Paths, it could sign Hash Path Ends each day or each hour to alleviate the initial hashing operation.
 		At a 128-bit Hash Point length, a Hash Path length on the order of decades is safe from attack \cite{Neish_Dissertation}.
-		Therefore, the OTAR transmission frequency is mainly driven by the desired TFAF, see Section~\ref{sub:mt51_schedule_frequency}.
+		Therefore, the OTAR transmission frequency is primarily driven by the desired TFAF, see Section~\ref{sub:mt51_schedule_frequency}.
 
 		To meet a standard 128-bit security level for TESLA, we must use cryptographically independent 128-bit long keys for each HMAC.
 		It is desirable to minimize the number of bits required for TESLA Hash Path distribution.
@@ -543,7 +546,7 @@
 		\subsubsection{ECDSA-derived Hash Path Salt} \label{subsub:ecdsa_salt}
 
 			The security of each TESLA Hash Path hinges on the difficulty of computing any earlier preimage Hash Point of the Hash Path before Provider releases it.
-			Unsalted Hash Paths are susceptible to precomputation attacks, also known as Rainbow Table Attacks.
+			Unsalted Hash Paths are susceptible to precomputation attacks, also known as Rainbow Table Attacks~\cite{boneh2017graduate}.
 			An attacker precomputes a large number of Hash Paths and stores them hoping that one of those precomputed Hash Paths contains the currently secure Hash Point mid Hash Path.
 			If that ever occurs, the attacker then has in-memory Hash Points earlier on the no-longer-secure Hash Path, and can spoof SBAS authenticated messages.
 			To prevent this, we must introduce random variations called salt to the Hash Function that makes a precomputation attack infeasible.
@@ -555,7 +558,7 @@
 			A 128-bit salt would suffice the security requirements.
 			Given the modular design of the proposed MT51, one could append to the metadata definitions of Table~\ref{tab: meta-data} a designation for the salt of a particular Hash Path.
 			This would require an additional message sent to OTAR a Hash Path, which would likely not pose a burden on the SBAS schedule.
-			However, we propose that the Hash Path salt derives from the level-2 signature protocol, saving a message.
+			However, we propose a preferred alternative that saves an MT51 message by having the Hash Path salt derives from the level-2 signature protocol.
 			We propose Provider compute a Hash Path Salt $S^P$ for Equation~\eqref{eq: hash path} via Algorithm~\ref{alg: salt}.
 
 			\begin{algorithm}%\label{alg: salt}
@@ -710,7 +713,7 @@
 	\subsection{MT51-B Metadata Design} \label{sub:metadata_design}
 
 		Within the authenticating psuedorandom data metadata, we specify the inclusion of a Germane and Authenticating Key hash.
-		Since the payload is pseudorandom, metadata must exist so that the receiver to associate the unique MT51-B payloads.
+		Since the payload is pseudorandom, metadata must exist so that the receiver can associate the unique MT51-B payloads.
 		Any identifying feature would suffice, such as the ordered key number, rolling over every $2^{16} = 65536$ keys.
 		However, the use of hash on the entire key provides additional features.
 		The key schedule need not be rigid, linear, or sequential.
@@ -733,7 +736,8 @@
 		MT51-B messages could authenticate specific messages, identified by 16-bit hashes, immediately with ECDSA.
 		If keys are ever compromised, MT51-B could also disseminate key revocations.
 		A revocation MT51-B would include eight 16-bit hashes of the affected keys and would only need to be broadcast until the keys are retired under standard procedure.
-		Since each broadcast of an MT51-B is accompanied by a germane expiration time, Provider can arbitrarily shorten the applicability of a particular key by rebroadcasting the MT51-B with a different expiration time, noting the assumption that receivers actually receive that updated broadcast and that the Hash Path salt is not disrupted, see Section~\ref{subsub:ecdsa_salt}. 
+		Since each broadcast of an MT51-B is accompanied by a germane expiration time, Provider can arbitrarily shorten the applicability of a particular key by rebroadcasting the MT51-B with a different expiration time, noting the assumption that receivers actually receive and record that updated broadcast and that the Hash Path salt is not disrupted, see Section~\ref{subsub:ecdsa_salt}.
+		Receivers would need to remember key expiration time changes and key revocations, and receivers that did not receive that update would remain vulnerable.
 		If Provider can re-sign data, the metadata must include a parameter that identifies that particular authentication.
 		This is because without the germane key hash, authenticating key hash, segment number, and authentication instance number, each segment of psuedorandom data cannot be associated because they are pseudorandom.
 		Furthermore, MT51-B could manage other authentication schemes, such as an authentication scheme adopted by GNSS, see Section~\ref{sub:core_eph}.
@@ -852,7 +856,7 @@
 		We propose MT51-A to (1) acknowledge there are other ways of constructing the MT51 metadata that remove definition redundancy and spare bits and (2) specify the minimum metadata.
 		For instance, the SBAS Provider could identify keys by their expiration time, removing the need for the Germane and Authenticating Key Hashes in the metadata; however, this would disallow parallel and redundant key management.
 		As SBAS Stakeholders discuss their desires, the metadata will become more or less crowded (noting even MT51-B has some spare bits).
-		Therefore, we offer a couple of suggests on how to reason about balancing the design while maintaining the schemes modularity, simplicity, and flexibility.
+		Therefore, we offer a couple of suggestions on how to reason about balancing the design while maintaining the schemes modularity, simplicity, and flexibility.
 
 		First, as features are removed, rather than shifting bit allocations from the metadata to OTAR Payload Segment, SBAS Providers could instead replace metadata bits with fountain codes.
 		This suggestion would (1) maintain the MT51's integer-division property on the authenticating psuedorandom data ensuring there is no wasted zero-padding on the delivered data, and (2) add loss-tolerant properties of MT51.
