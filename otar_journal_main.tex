@@ -27,16 +27,15 @@
 
 \section{Introduction} \label{sec:introduction}
 
-	In this work, we delineate a complete Satellite-Based Augmentation System (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backward compatibility, data efficiency, and quick time to authenticated first fix (``TFAF'').
+	In this work, we delineate a complete Satellite-Based Augmentation System (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backward compatibility, data efficiency, and quick time of first authenticated fix (``TFAF'').
 	Moreover, it is expandable to additional stakeholder feedback.
 	This work addresses the complete authentication scheme design, including connecting receiver hardware requirements to maintenance schedules, key updates, and scheme maintenance, and uses a full-stack Monte-Carlo SBAS simulation to test and evaluate the scheme's performance.
 
 	Satellite-Based Augmentation Systems (the several international systems together, ``SBASs''), such as the United States' Wide-Area Augmentation System (``WAAS'') among other international equivalents, have become integral to the Global Navigation Satellite System (``GNSS'') for civilian aviation use.
 	International parties that choose to implement an SBAS (each a ``Provider'') use listening stations around their service volume to assess GNSS satellite positioning data and then broadcast corrections widely via geostationary satellites.
-	This information includes wide-area GNSS differential corrections and GNSS satellite health and integrity.
+	This information includes wide-area differential GNSS corrections and GNSS satellite information such as health and integrity.
 	Like most GNSS core-constellation signals, the SBAS signal is open and susceptible to spoofing, and with its ubiquitous use in civilian aviation, SBAS should be augmented with spoofing resistant capabilities to ensure continued civilian aviation safety.
-	Providers agree to share a common SBAS message standard.
-	This work pertains to how the SBAS message standard could be augmented to provide an authenticated service resistant to spoofing.
+	As Providers agree to share a common SBAS message standard, our work seeks to specify how SBAS can be augmented to provide an authenticated service resistant to spoofing.
 
 	SBAS is primarily a data service.
 	It broadcasts data that assists GNSS users.
@@ -95,7 +94,7 @@
 	\subsection{ECDSA} \label{sub:ecdsa}
 
 		ECDSA is a standardized asymmetric authentication protocol.
-		There are details not mentioned in the following summary description of ECDSA, so for a more precise definition, we refer the reader to widely available detailed definitions in cryptographic literature or the internet.
+		There are details not mentioned in the following summary description of ECDSA, so for a more precise definition, we refer the reader to widely available detailed definitions in cryptographic literature or the internet~\cite{boneh2017graduate}.
 		The protocol specifies a signing function and a verifying function.
 		Let $n$ be the security level of an instance of the protocol, which linearly describes the required computation to {\em exhaustively} break the instance.
 		Provider generates a secure random $2n$-bit integer for long-term use as a secret private key.
@@ -177,7 +176,7 @@
 
 		We propose a two-level ECDSA key structure, as suggested \cite{Neish_Dissertation}.
 
-		Level-1 keys will be 256-bit ECDSA keys managed internationally by a trusted Certificate Authority (``CA'').
+		Level-1 keys will be 256-bit-security ECDSA keys managed internationally by a trusted Certificate Authority (``CA'').
 		Each level-1 key will be in use for 100 weeks.
 		CA shall compute a large number of level-1 keys for use in the perpetual future and then encrypt each key individually via AES-128 with different AES encryption keys (one per level-1 key) held secret by CA.
 		CA will distribute the AES-ciphertext to receiver manufacturers.
@@ -186,7 +185,7 @@
 		As the receiver receives the key to decrypt its onboard AES-ciphertext, it will update its current level-1 ECDSA public key.
 		Each level-1 public key will be a 512-bits, and any signature derived therefrom will be a 1024-bits.
 
-		Level-2 keys will be 128-bit ECDSA keys managed by Provider.
+		Level-2 keys will be 128-bit-security ECDSA keys managed by Provider.
 		Each level-2 key will be in use for ten weeks.
 		For a new level-2 key, Provider will generate a secure-random private ECDSA key and its associated public key.
 		Provider will submit the new public key to CA for a signature from CA's current level-1 key.
@@ -507,7 +506,7 @@
 		TESLA allows receivers to derive missed Hash Points from Hash Points released later along Provider's precomputed Hash Path held secret.
 		Suppose a receiver misses an MT50 message and therefore does not receive a Hash Point.
 		The receiver can derive that missing Hash Point by computing the Hash of the next released Hash Point.
-		Suppose a receiver misses several day's worths of Hash Points; upon receipt of a new Hash Point, it can hash all they down to the Hash Path End via Equation~\eqref{eq: hash path} to assert the new messages' immediate authenticity.
+		Suppose a receiver misses several day's worths of Hash Points; upon receipt of a new Hash Point, it can hash all the way down to the Hash Path End via Equation~\eqref{eq: hash path} to assert the new messages' immediate authenticity.
 		This property scales along the length of the Hash Path.
 		If a receiver is off longer than the Hash Path's length or applicability, it will need to OTAR the Hash Path End via MT51 and ECDSA.
 
@@ -820,8 +819,8 @@
 		Therefore, the Authentication Stack must be sent periodically over their use.
 		From Table~\ref{tab: psuedorandom lengths}, a complete Authentication Stack requires 16 MT51s. 
 		We propose that Provider broadcast the current Authentication Stack every 5 minutes so that a cold-start receiver achieves the first authenticated fix in 5 minutes, assuming no message loss.
-		This requirement would require that a message from the set of 16 unique MT51-Bs be transmitted 1 out of every 18 messages, rounded up.
-		With multiple geostationary satellites and frequencies, the satellites can broadcast the unique MT51s out of phase to decrease the authenticated first fix time as mentioned in Section~\ref{sub:tesla_efficiency}.
+		This requires that a message from the set of 16 unique MT51-Bs be transmitted 1 out of every 18 messages.
+		With multiple geostationary satellites and frequencies, the satellites can broadcast the unique MT51s out of phase to decrease the TFAF as mentioned in Section~\ref{sub:tesla_efficiency}.
 
 		Furthermore, the next keys, applicable immediately upon expiration of the current keys, must be sent well before their actual use for a seamless transition as keys expire.
 		To protect a specific new key's security, it would be prudent to only send that new key just before use.
@@ -907,7 +906,7 @@
 	This internet or a data-based time can be rigorously authenticated with cryptographic authentication according to the standard of the medium.
 	The original TESLA protocol provides a secure time-synchronization procedure: Provider would establish an internet server to accept and operate on receiver-generated nonces that would work within the secure Hash Path\cite{perrig2005timed}.
 	Our choice to use the word {\em compare} is intentional to address the concern about allowing external inputs regarding time into the isolated SBAS receiver.
-	This comparison is achievable without exposing the receiver's time to archetype hacking strategies.
+	This comparison is achievable without exposing the receiver's time to hacking strategies.
 	Other strategies would also alert the pilot that the SBAS time is not trusted, such as incorporating the GNSS time estimate into the Air Traffic Control Radar Beacon System.
 	If the beacon-broadcasted time were more than 7 seconds behind the trusted time on the ground, then ground services could alert the aircraft of the discrepancy.
 
