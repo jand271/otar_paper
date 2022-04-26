@@ -266,7 +266,7 @@
 		Per the SBAS specifications, in the event of a GNSS integrity alert, an alert message must be sent by Provider four messages in a row.
 		Therefore,  occasionally an alert message will take priority over an MT50.
 		The salted Hash Function described in Equation~\eqref{eq: hash path} accommodates small perturbations to the schedule resulting from alert messages, see Section~\ref{subsub:time_counter} and Figure~\ref{fig: alert schedule}.
-		Even with an MT50 delay, each MT50 must sign the messages it would have signed without an alert, see Section~\ref{sub:tesla_security}.
+		Even with an MT50 delay, each MT50 must sign the messages it would have signed without an alert, see Section~\ref{sub:subsub:time_counter}.
 
 	\subsection{MT51} \label{sub:mt51}
 
@@ -591,13 +591,21 @@
 				\label{fig: alert schedule}
 			\end{figure}
 
-			To assert the security of our scheme, it is essential that, in the event of an alert, any delayed MT50 sign the original messages corresponding to the loosely synchronized schedule.
+			In the event of an alert, we must modify the scheme to maintain the security on the time-synchronization schedule.
+			Nominally, the earliest a receiver will authenticate a message is 6 seconds after transmission, protecting the scheme against for up to six-second delay attack.
+			That length of time is the minimum spread between a delivered HMAC and the corresponding Hash Point used to generate that HMAC.
+			In Figure~\ref{fig: alert schedule}, that six-second minimum spread is violated unless {\em either} one of the following two proposed modifications is implemented.
+			Option 1: in the event of an alert, the Hash Point after the normal Hash Point authenticated messages during an alert. 
+			Concretely with Figure~\ref{fig: alert schedule}, the MT50 in column 168 (not shown) would authenticate the messages of Alerts 3 through 6.
+			Option 2: the receiver does not accept the delayed MT50 until it is authenticated via a 16-bit HMAC like any other message.
+			Concretely with Figure~\ref{fig: alert schedule}, the receiver does not use the delayed MT50s of colums 157 though 160 until it receives a valid HMAC from the MT50 in column 162 and the Hash Point delivered in column 168 (not shown).
+			Both Option 1 or Option 2 provides the same security by increasing the HMAC-to-Hash-Point spread back above six seconds.
+			Based on our implementation work with MAAST, we claim that Option 2 may be easier to implement with receivers in software.
+			To limit the information lost, any delayed MT50 should sign the original messages corresponding to the loosely synchronized schedule.
 			Concretely, in Figure~\ref{fig: alert schedule} in the row labeled Alert 6, (1) the MT50 of column 160 must sign the messages of columns 151 through 155, (2) the MT 50 of column 162 must sign the messages of columns 157 through 161, and (3) the non-MT50 message of column 156 remain unauthenticated.
 			For the rows labeled alerts 3 through 6, the integrity messages of column 156 each remain unauthenticated.
 			This is acceptable because those messages will only tell receivers not to use the service, and the surrounding integrity messages will be authenticated anyway.
-			Without asserting this requirement, this security scheme becomes less secure.
-			The security hinges on the loosely synchronized schedule, which is susceptible to a replay attack or a time-delay attack.
-			If authenticated messages are occasionally sent after their agreed schedule, then the amount of replay delay required is occasionally reduced, and an adversary could spoof alerts to make such a replay attack easier.
+			Without this requirement, some messages of substance will not be authenticated.
 
 	\subsection{TESLA Security} \label{sub:tesla_security}
 
@@ -859,10 +867,10 @@
 	There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\cite{Psiaki2016, Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
 
 	To break SBAS security by breaking the loosely time-synchronized assumption, an adversary must spoof the receiver time by delaying the receiver time.
-	In our case, this delay is 7 seconds.
-	If the receiver clock were 7 seconds behind Provider's clock, an adversary listening to Provider could note the delay-released Hash Point, derive the keys, and generate forged HMACs.
+	In our case, this delay is six seconds.
+	If the receiver clock were six seconds behind Provider's clock, an adversary listening to Provider could note the delay-released Hash Point, derive the keys, and generate forged HMACs.
 	The longer the delay, the more HMACs an adversary can forge.
-	Naively, one could ensure that the receiver does not allow 7-second jumps of time to mitigate; however, this strategy would not work with a creeping Replay Attack, the worst-case attack model we examine in this work.
+	Naively, one could ensure that the receiver does not allow six-second jumps of time to mitigate; however, this strategy would not work with a creeping Replay Attack, the worst-case attack model we examine in this work.
 	In a creeping Replay Attack, an adversary listen and replays the GNSS and SBAS signals but incrementally delay them slowly enough to avoid detection by the receiver.
 	There are several mitigation strategies to mitigate the creeping Replay Attack.
 
@@ -870,7 +878,7 @@
 	The prior art has explored how to use clock tolerances to generate and use tolerance bounds to assert clock trust\cite{time_sync_paper}.
 	We have explored a few methodologies to fuse GNSS and onboard clock to evaluate whether a receiver is actively in a creeping Replay Attack, such as Pearson hypothesis tests and Kalman-filter-based hypotheses tests.
 	The explicit hypothesis methodologies and their evaluation are left for other work.
-	These strategies can detect a creeping Replay Attack before the 7-second breakage boundary, provided the creeping delay rate is faster than the uncertainty bound of the onboard clock.
+	These strategies can detect a creeping Replay Attack before the six-second breakage boundary, provided the creeping delay rate is faster than the uncertainty bound of the onboard clock.
 	For instance, a consumer quartz clock oscillator will gain or lose on the order of 15 seconds a month.
 	This means that any hypothesis test that exclusively uses the onboard clock to estimate an authentic time is information-bound to 15 seconds per month.
 	Aircraft caretakers and airport security officials could consider implementing procedures that guarantee that the aircraft receiver periodically receives a trusted GNSS and SBAS signals, such as while taxiing at an airport where security officials ostensibly monitor for spoofed signals and jamming.
@@ -887,7 +895,7 @@
 	Our choice to use the word {\em compare} is intentional to address the concern about allowing external inputs regarding time into the isolated SBAS receiver.
 	This comparison is achievable without exposing the receiver's time to hacking strategies.
 	Other strategies would also alert the pilot that the SBAS time is not trusted, such as incorporating the GNSS time estimate into the Air Traffic Control Radar Beacon System.
-	If the beacon-broadcasted time were more than 7 seconds behind the trusted time on the ground, then ground services could alert the aircraft of the discrepancy.
+	If the beacon-broadcasted time were more than six seconds behind the trusted time on the ground, then ground services could alert the aircraft of the discrepancy.
 
 	Since the ranging signal remains unauthenticated via rigorous methods established with cryptography, SBAS must take a nuanced approach to assert the loosely time-synchronized assumption.
 
