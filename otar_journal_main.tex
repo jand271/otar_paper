@@ -903,7 +903,7 @@
 
 	To examine the efficacy of this scheme, we implemented a full-stack simulation of this scheme in MAAST.
 	By full-stack simulation, we mean the MAAST Matlab implementation called the secure com.sun.security.auth java package to (1) simulate actual SBAS message transmission with ECDSA and TESLA routines asserting authentic messages and (2) testing that verifies that forged messages are detected.
-	At the time of publication, the scheme in its entirety herein was implemented except (1) the hash path salt, (2) the PRN concatenation operation allowing multiple satellites, (3) pre-stored encrypted level-1 public keys.
+	At the time of publication, the scheme in its entirety herein was implemented except (1) the hash path salt, (2) the PRN concatenation operation allowing multiple satellites, (3) pre-stored encrypted level-1 public keys, and (4) and testing for alert cases.
 	These features do not materially affect the results' outcome because we took special care to ensure that the simulated scheme had the same number of unique messages per Authentication Stack.
 	Implementing these features is left to future work after feedback from the SBAS stakeholders on this work.
 
@@ -911,15 +911,34 @@
 	Given the current use of the SBAS message schedule, MT51s were sent more frequently than the requirement specified above at one in seventeen messages.
 	Therefore, among our simulations, TFAF occurred usually within one minute, and if not, just outside one minute.
 	The TFAF is less than our requirement from Section~\ref{sub:mt51_schedule_frequency} because the simulated Provider sent the 16 unique messages within open slots of the SBAS schedule.
+	The following changes were made to the flight algorithms \cite{}.
 	Therefore, our simulation indicates that SBAS availability and continuity are not affected by this authentication scheme.
+	Figure~\ref{fig:results} provides availability maps comparing two cases (1) no authentication and (2) faithful authentication via MT50 and MT51 with message information accepted only after authentication.
+	Within Figure~\ref{fig:results}, the availability map is slightly different, noticeable at the service volume boundaries over Alaska and Canada.
+	Given the nearly identical results under the reasonable fidelity of MAAST, we find these results demonstrate the viability of this work's scheme.
+
+	\begin{figure}
+		\centering
+		\includegraphics[width=0.47\linewidth]{fig/no_auth_avail.png}
+		\includegraphics[width=0.47\linewidth]{fig/auth_avail.png}
+		\caption{
+			Availability contour maps from the output of MAAST with no authentication (left) and with authentication (right).
+			In the authentication case, messages were only accepted by receiver after authentication.}
+		\label{fig:results}
+	\end{figure}
 
 \section{Conclusion} \label{sec:conclusion}
 
-	By delineating and establishing the cryptographic authentication security and showing that it does not materially affect the performance of SBAS, we show that this scheme is a viable solution to appending cryptographic authenticity to SBAS.
-	This scheme merely appends two message types to the schedule, meaning it does not require removing power from the I-channel to support a Q-channel strategy.
-	The scheme is immediately backward compatible because older receivers can ignore the new message types.
+	This works delineates a complete TESLA-based SBAS authentication scheme that includes OTAR.
+	The scheme merely appends two message types to the schedule, meaning it does not require removing power from the I-channel to support a Q-channel strategy.
+	It is immediately backward compatible because older receivers can ignore the new message types and it is flexible and expandable according to the needs and additional feedback from SBAS Stakeholders.
+	The flexibility of the scheme derives from this works suggestion to craft a single message for all cryptographic maintenance.
 	Given the reasonable use of onboard clocks, external clocks, and maintenance patterns, we assert the existence of reasonable, nuanced strategies to mitigate attacks against the lose time-synchronized assumption required by TESLA.
-	Given that we can achieve authentication with just two MTs on the I-channel, we believe this scheme, or something similar, is the best way to achieve SBAS authentication.
+
+	We test the scheme with a faithful, full-stack simulation that includes full encoding and decoding of messages and use of a proper cryptographic library.
+	Since the appended messages fit within the unused slots in the message schedule, our simulation finds a negligible difference in performance of simulated receivers.
+	Moreover, since the scheme makes use of space within the I-channel, no use of the Q-channel (and the associated power decrease and loss of service at service volume boundaries) is required.
+	Therefore, we find this scheme, or something substantially similar, is acceptable for SBAS authentication.
 
 \bibliographystyle{ieeetr}
 \bibliography{references}
