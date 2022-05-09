@@ -266,7 +266,7 @@
 		Per the SBAS specifications, in the event of a GNSS integrity alert, an alert message must be sent by Provider four messages in a row.
 		Therefore,  occasionally an alert message will take priority over an MT50.
 		The salted Hash Function described in Equation~\eqref{eq: hash path} accommodates small perturbations to the schedule resulting from alert messages, see Section~\ref{subsub:time_counter} and Figure~\ref{fig: alert schedule}.
-		Even with an MT50 delay, each MT50 must sign the messages it would have signed without an alert, see Section~\ref{sub:subsub:time_counter}.
+		Even with an MT50 delay, each MT50 must sign the messages it would have signed without an alert, see Section~\ref{subsub:time_counter}.
 
 	\subsection{MT51} \label{sub:mt51}
 
@@ -599,7 +599,7 @@
 			Concretely with Figure~\ref{fig: alert schedule}, the MT50 in column 168 (not shown) would authenticate the messages of Alerts 3 through 6.
 			Option 2: the receiver does not accept the delayed MT50 until it is authenticated via a 16-bit HMAC like any other message.
 			Concretely with Figure~\ref{fig: alert schedule}, the receiver does not use the delayed MT50s of colums 157 though 160 until it receives a valid HMAC from the MT50 in column 162 and the Hash Point delivered in column 168 (not shown).
-			Both Option 1 or Option 2 provides the same security by increasing the HMAC-to-Hash-Point spread back above six seconds.
+			Both Option 1 or Option 2 provides the same security by increasing the minimum HMAC-to-Hash-Point spread back to six seconds.
 			Based on our implementation work with MAAST, we claim that Option 2 may be easier to implement with receivers in software.
 			To limit the information lost, any delayed MT50 should sign the original messages corresponding to the loosely synchronized schedule.
 			Concretely, in Figure~\ref{fig: alert schedule} in the row labeled Alert 6, (1) the MT50 of column 160 must sign the messages of columns 151 through 155, (2) the MT 50 of column 162 must sign the messages of columns 157 through 161, and (3) the non-MT50 message of column 156 remain unauthenticated.
@@ -759,7 +759,7 @@
 		At a 128-bit OTAR Payload Segment, the required delivery of 16 unique MT51 {\em already} meets the KPIs.
 		Increasing the OTAR Payload Segment would decrease the number of unique MT51s.
 		This would decrease the burden on the SBAS Schedule, decrease TFAF, and have a less effect on continuity and availability, among other considerations.
-		Therefore, we expect the results of Section~\ref{} to be repeatable with a design with a larger 128-bit OTAR Payload Segment.
+		Therefore, we expect the results of Section~\ref{sec:full_stack_simulation} to be repeatable with a design with a larger 128-bit OTAR Payload Segment.
 
 	\subsection{Core Constellation Ephemerides Authentication} \label{sub:core_eph}
 
@@ -914,16 +914,26 @@
 	The following changes were made to the flight algorithms \cite{}.
 	Therefore, our simulation indicates that SBAS availability and continuity are not affected by this authentication scheme.
 	Figure~\ref{fig:results} provides availability maps comparing two cases (1) no authentication and (2) faithful authentication via MT50 and MT51 with message information accepted only after authentication.
-	Within Figure~\ref{fig:results}, the availability map is slightly different, noticeable at the service volume boundaries over Alaska and Canada.
+	Within Figure~\ref{fig:results}, the availability map is slightly different, noticeable at the service volume boundaries over Alaska and Canada; however, given the reasonable fidelity of MAAST, we consider the results indistinguishable.
+	The pie graphs indicate the distribution of the different messages with no authentication (left) and with authentication (right).
+	In the authentication case, MT51s are sent 1 out of every 6 messages.
+	While our requirement specifies MT51 is sent about 1 our of every 17 messages (about 6\%), the simulation schedule replaces the remaining MT63s with MT51s.
 	Given the nearly identical results under the reasonable fidelity of MAAST, we find these results demonstrate the viability of this work's scheme.
 
 	\begin{figure}
 		\centering
-		\includegraphics[width=0.47\linewidth]{fig/no_auth_avail.png}
-		\includegraphics[width=0.47\linewidth]{fig/auth_avail.png}
+		\begin{tabular}{c|c} 
+			No Authentication & With Authentication \\ 
+			\includegraphics[width=0.47\linewidth]{fig/no_auth_avail.png} & \includegraphics[width=0.47\linewidth]{fig/auth_avail.png} \\
+			\includegraphics[width=0.47\linewidth]{fig/thumbnail_no_auth_pie.png} & \includegraphics[width=0.47\linewidth]{fig/thumbnail_auth_pie.png}
+		\end{tabular} \\
 		\caption{
 			Availability contour maps from the output of MAAST with no authentication (left) and with authentication (right).
-			In the authentication case, messages were only accepted by receiver after authentication.}
+			In the authentication case, messages were only accepted by receiver after authentication.
+			The pie graphs indicate the distribution of the different messages with no authentication (left) and with authentication (right).
+			In the authentication case, MT51s are sent 1 out of every 6 messages.
+			While our requirement specifies MT51 is sent about 1 our of every 17 messages (about 6\%), the simulation schedule replaces the remaining MT63s with MT51s.
+			}
 		\label{fig:results}
 	\end{figure}
 
@@ -942,7 +952,5 @@
 
 \bibliographystyle{ieeetr}
 \bibliography{references}
-
-
 
 \end{document}
