@@ -277,8 +277,8 @@
 		Table~\ref{tab: mt50} provides our proposed definition of MT50 with the bit allocations.
 		Provider will send an MT50 at a cadence of every six messages.
 		The delayed key release to authenticate messages means that messages will be authenticated between 7 and 11 seconds after their broadcast.
-		Provider will set the cadence of integrity messages to always immediately proceed MT50s to minimize integrity message authentication time.
-		If the receiver is not able to authenticate a message because of a lost MT50, it generally disregards that message (messages that inform receivers to decrease the level or trust or to not use the service do not need to be disregarded).
+		Provider should set the cadence of integrity messages to always immediately preceed the scheduled MT50s to minimize integrity message authentication time.
+		If the receiver is not able to authenticate a message because of a lost MT50, it generally disregards that message (information that alerts the receivers to decrease the level of trust need not be disregarded).
 		Within the message definition, there are five 16-bit HMACs and one 128-bit Hash Point.
 		At the receiver receipt of an MT50, the included five HMACs correspond to the previous messages with a secret Hash Point known only to Provider at message sending time.
 		The included 128-bit Hash Point corresponds to the HMACS included in the {\em previous} MT50 message sent 6 seconds earlier.
