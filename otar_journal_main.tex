@@ -1,21 +1,55 @@
 
-\documentclass[letterpaper,times]{IONconf/IONconf}
+% From ION Journal Latex Template
+	\documentclass[APA,STIX1COL]{IONjournal/ION-APA Template}
+	\usepackage{tabularx}
+	\def\aa{\leavevmode\hphantom{0}}
+	\def\b{\leavevmode\hphantom{$^0$}}
+	\usepackage{balance}
+
+
+	\makeatletter
+	\def\NAT@aysep{,}
+	\makeatother
+
+	\articletype{Article Type}%
+
+	\received{9 May 2022}
+	\revised{FIRST SUBMITTED DRAFT}
+	\accepted{FIRST SUBMITTED DRAFT}
+
+	\raggedbottom
 
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{multirow}
 \usepackage{float}
-\usepackage[ruled,vlined]{algorithm2e}
-\SetArgSty{textnormal}
+%\usepackage[ruled,vlined]{algorithm2e}
+%\SetArgSty{textnormal}
 
-\title{On SBAS Authentication with OTAR Schemes}
-\author{Jason Anderson, Sherman Lo, Andrew Neish, Todd Walter}
 
 \begin{document}
 
-	\maketitle
+\title{On SBAS Authentication with OTAR Schemes}
 
-\begin{abstract}
+\author[1]{Jason Anderson*}
+
+\author[1]{Sherman Lo}
+
+\author[1]{Andrew Neish}
+
+\author[1]{Todd Walter}
+
+\authormark{Anderson \textsc{et al}}
+
+\address[1]{\orgdiv{Aeronautics and Astronautics}, \orgname{Stanford}, \orgaddress{\state{California}, \country{United States of America}}}
+
+\address[2]{\orgdiv{Org Division}, \orgname{Org Name}, \orgaddress{\state{State name}, \country{Country name}}}
+
+\address[3]{\orgdiv{Org Division}, \orgname{Org Name}, \orgaddress{\state{State name}, \country{Country name}}}
+
+\corres{Corresponding author: Jason Anderson \email{jand271@stanford.edu}.}
+
+\abstract[Summary]{
 	Herein we delineate a complete Satellite-Based Augmentation System (``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR''), that uses Elliptic Curve Digital Signature Algorithm (``ECDSA'') and Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') without using the Quadrature (``Q'') channel.
 	This scheme appends two new message types (''MT'') to the SBAS scheduler without overburdening the SBAS message schedule.
 	We take special care to make our scheme (1) meet appropriate security requirements to prevent and deter spoofing; (2) compatible with existing cryptographic standards; (3) flexible, expandable, and future proof to different cryptographic and implementation schemes; and (4) backward compatible with legacy receivers.
@@ -23,7 +57,20 @@
 	The scheme requires loose time synchronization between the receiver and the provider, and we assert reasonable mitigation strategies to prevent attacks to that assumption.
 	This work also discusses the SBAS provider and receiver machine state and startup, including aircraft that traverse differing SBAS coverage areas.
 	We test our scheme with existing SBAS simulation and analysis tools to show negligible effects on SBAS availability and continuity requirements.
-\end{abstract}
+}
+
+\keywords{SBAS, Authentication, TESLA, Over-the-air Rekeying}
+
+\jnlcitation{\cname{%
+\author{Anderson J.}, 
+\author{Lo S.}, 
+\author{Neish A.}, 
+\author{Walter T.}}, 
+\ctitle{On SBAS Authentication with OTAR Schemes}. \cjournal{NAVIGATION}, \cvol{DRAFT}.}
+
+\maketitle
+
+% \footnotetext{\textbf{Abbreviations:} ANA, anti-nuclear antibodies; APC, antigen-presenting cells; IRF, interferon regulatory factor} 
 
 \section{Introduction} \label{sec:introduction}
 
@@ -392,69 +439,69 @@
 		With hardware acceleration, this process time could decrease and be parallelized with other standard receiver processes.
 		This initial hashing computation only occurs when the receiver turns on and should not hinder processing SBAS navigation data in real-time after an authenticated fix.
 
-		\begin{algorithm}%\label{alg: TESLA provider}
-			\caption{Provider Procedures for Single Satellite, Single Frequency Authenticated Message Distribution with TESLA.}
-			\label{alg: TESLA provider}
-			\SetAlgoLined
-			Generate a new Hash Path $P$ with points $p^P_2 ... p^P_{n+1}$ via Equation~\eqref{eq: hash path} and a secure random $p^P_1$\;
-			Broadcast $p^P_{n+1}$ signed by a Level-2 ECDSA key and distributed via MT51\;
-			\For{$i = [n, n-1, \cdots, 2, 1]$}{
-				Broadcast any 5 messages, called $m_1 \cdots m_5$\;
-				Derive $k_1 \cdots k_5$ from Equation~\eqref{eq: key} with $p_i$ and the sending time of $m_1 \cdots m_5$\;
-				Derive $s_1 \cdots s_5$ from Equation~\eqref{eq: signature} from $m_1 \cdots m_5$ and $k_1 \cdots k_5$\;
-				Recall the correct Hash Point to release $p_r$ (the Hash Point from the previous loop)\;
-				\eIf{$i == n$}{
-					$p_r = p^{P-1}_1$\;
-				}{
-					$p_r = p^P_{i+1}$\;
-				}
-				Send MT50 $m_6$ message with $s_1 \cdots s_5$ and $p_r$\;
-			}
-			For continuous operation, compute and broadcast the next Hash Path End $p^{P+1}_{n+1}$, signed by a Level-2 ECDSA key and distributed via MT51, among the groups of sent messages $m_1 \cdots m_5$\;
-		\end{algorithm}
+		% \begin{algorithm}%\label{alg: TESLA provider}
+		% 	\caption{Provider Procedures for Single Satellite, Single Frequency Authenticated Message Distribution with TESLA.}
+		% 	\label{alg: TESLA provider}
+		% 	\SetAlgoLined
+		% 	Generate a new Hash Path $P$ with points $p^P_2 ... p^P_{n+1}$ via Equation~\eqref{eq: hash path} and a secure random $p^P_1$\;
+		% 	Broadcast $p^P_{n+1}$ signed by a Level-2 ECDSA key and distributed via MT51\;
+		% 	\For{$i = [n, n-1, \cdots, 2, 1]$}{
+		% 		Broadcast any 5 messages, called $m_1 \cdots m_5$\;
+		% 		Derive $k_1 \cdots k_5$ from Equation~\eqref{eq: key} with $p_i$ and the sending time of $m_1 \cdots m_5$\;
+		% 		Derive $s_1 \cdots s_5$ from Equation~\eqref{eq: signature} from $m_1 \cdots m_5$ and $k_1 \cdots k_5$\;
+		% 		Recall the correct Hash Point to release $p_r$ (the Hash Point from the previous loop)\;
+		% 		\eIf{$i == n$}{
+		% 			$p_r = p^{P-1}_1$\;
+		% 		}{
+		% 			$p_r = p^P_{i+1}$\;
+		% 		}
+		% 		Send MT50 $m_6$ message with $s_1 \cdots s_5$ and $p_r$\;
+		% 	}
+		% 	For continuous operation, compute and broadcast the next Hash Path End $p^{P+1}_{n+1}$, signed by a Level-2 ECDSA key and distributed via MT51, among the groups of sent messages $m_1 \cdots m_5$\;
+		% \end{algorithm}
 
-		\begin{algorithm}%\label{alg: TESLA receiver}
-			\caption{Receiver Procedures for Single Satellite, Single Frequency Authenticated Message Distribution with TESLA.}
-			\label{alg: TESLA receiver}
-			\While{on}{
-				Receive MT51 payload segments associated via the MT51 metadata and store into three hash tables $H_1$, $H_2$, and $H_3$. 
-				$H_1$ holds data for level-1 ECDSA keys. 
-				$H_2$ holds data for level-2 ECDSA keys and associated level-1 signatures on those keys.
-				$H_3$ holds data for TESLA Hash Path Ends $p^P_{n+1}$ and associated level-2 signatures on those Hash Path Ends.
-				Each element in the Hash Tables store metadata such as the key expiration time and the relevant higher-level authenticating key.\;
-				Await receipt of all needed unique MT51 OTAR Payload Segments, called the Authentication Stack, to assert authenticated Hash Path Ends.
-				A Hash Path End element $p^P_{n+1}$ stored in $H_3$ is authenticated if itself and signature are ECDSA verified by an authenticated element in $H_2$.
-				A public ECDSA key element stored in $H_2$ is authenticated if itself and signature data are ECDSA verified by an authenticated element in $H_1$.
-				A public ECDSA key element stored in $H_1$ is authenticated if it was prestored from the CA.
-			}
-			\While{on}{
-				Receive and cache unauthenticated non-MT50 messages $m_7 \cdots m_{11}$\;
-				\If{$m_7 \cdots m_{11}$ are MT51}{
-					Follow the procedures immediately above\;
-				}
-				Receive and cache MT50 message $m_{12}$ with signatures $s_7 \cdots s_{11}$ and Hash Point $p_r$\;
-				Note time of receipt of $m_{12}$ as $t_r \gets t_{12}$\;
-				Recall $m_1 \cdots m_5$ and recall $m_6$ with signatures $s_1 \cdots s_5$\;
-				$i \gets 1$\;
-				$t_t \gets t_r$\;
-				$p_t \gets H(p_r, S^P, t_t)$ via Equation~\eqref{eq: hash path}\;
-				\While{$i \leq$ Maximum Iteration From Max Hash Path Length}{
-					\eIf{$p_t \in H_3$ and $H_3(p_t)$ is authenticated and not expired via ECDSA through level-1}{
-						$p_r$ is authenticated: check $m_1 \cdots m_5$ with $p_r$ and $s_1 \cdots s_5$ via Equations~\eqref{eq: key} and~\eqref{eq: signature} to authenticate $m_1 \cdots m_5$\;
-						Break while loop\;
-					}{
-						$t_t \gets t_t - 6$\;
-						$p_t \gets H(p_t, S^P, t_t)$ via Equation~\eqref{eq: hash path}\;
-					}
-					$i \gets i + 1$\;
-					Note: caching previously authenticated $p_t$ prevents excessive hashing to Hash Path End each iteration. There is no need to hash down to the Hash Path End more than once.
-				}
-				Note: after this iteration $m_1 \cdots m_5$ and $m_{12}$ are authenticated. $m_7 \cdots m_{11}$ are authenticated at the next iteration.\;
-				$m_1 \cdots m_5 \gets m_7 \cdots m_{11}$\;
-				$m_6 \gets m_{12}$\;
-				This procedure can be augmented to cached messages saved while awaiting a complete Authentication Stack.
-			}
-		\end{algorithm}
+		% \begin{algorithm}%\label{alg: TESLA receiver}
+		% 	\caption{Receiver Procedures for Single Satellite, Single Frequency Authenticated Message Distribution with TESLA.}
+		% 	\label{alg: TESLA receiver}
+		% 	\While{on}{
+		% 		Receive MT51 payload segments associated via the MT51 metadata and store into three hash tables $H_1$, $H_2$, and $H_3$. 
+		% 		$H_1$ holds data for level-1 ECDSA keys. 
+		% 		$H_2$ holds data for level-2 ECDSA keys and associated level-1 signatures on those keys.
+		% 		$H_3$ holds data for TESLA Hash Path Ends $p^P_{n+1}$ and associated level-2 signatures on those Hash Path Ends.
+		% 		Each element in the Hash Tables store metadata such as the key expiration time and the relevant higher-level authenticating key.\;
+		% 		Await receipt of all needed unique MT51 OTAR Payload Segments, called the Authentication Stack, to assert authenticated Hash Path Ends.
+		% 		A Hash Path End element $p^P_{n+1}$ stored in $H_3$ is authenticated if itself and signature are ECDSA verified by an authenticated element in $H_2$.
+		% 		A public ECDSA key element stored in $H_2$ is authenticated if itself and signature data are ECDSA verified by an authenticated element in $H_1$.
+		% 		A public ECDSA key element stored in $H_1$ is authenticated if it was prestored from the CA.
+		% 	}
+		% 	\While{on}{
+		% 		Receive and cache unauthenticated non-MT50 messages $m_7 \cdots m_{11}$\;
+		% 		\If{$m_7 \cdots m_{11}$ are MT51}{
+		% 			Follow the procedures immediately above\;
+		% 		}
+		% 		Receive and cache MT50 message $m_{12}$ with signatures $s_7 \cdots s_{11}$ and Hash Point $p_r$\;
+		% 		Note time of receipt of $m_{12}$ as $t_r \gets t_{12}$\;
+		% 		Recall $m_1 \cdots m_5$ and recall $m_6$ with signatures $s_1 \cdots s_5$\;
+		% 		$i \gets 1$\;
+		% 		$t_t \gets t_r$\;
+		% 		$p_t \gets H(p_r, S^P, t_t)$ via Equation~\eqref{eq: hash path}\;
+		% 		\While{$i \leq$ Maximum Iteration From Max Hash Path Length}{
+		% 			\eIf{$p_t \in H_3$ and $H_3(p_t)$ is authenticated and not expired via ECDSA through level-1}{
+		% 				$p_r$ is authenticated: check $m_1 \cdots m_5$ with $p_r$ and $s_1 \cdots s_5$ via Equations~\eqref{eq: key} and~\eqref{eq: signature} to authenticate $m_1 \cdots m_5$\;
+		% 				Break while loop\;
+		% 			}{
+		% 				$t_t \gets t_t - 6$\;
+		% 				$p_t \gets H(p_t, S^P, t_t)$ via Equation~\eqref{eq: hash path}\;
+		% 			}
+		% 			$i \gets i + 1$\;
+		% 			Note: caching previously authenticated $p_t$ prevents excessive hashing to Hash Path End each iteration. There is no need to hash down to the Hash Path End more than once.
+		% 		}
+		% 		Note: after this iteration $m_1 \cdots m_5$ and $m_{12}$ are authenticated. $m_7 \cdots m_{11}$ are authenticated at the next iteration.\;
+		% 		$m_1 \cdots m_5 \gets m_7 \cdots m_{11}$\;
+		% 		$m_6 \gets m_{12}$\;
+		% 		This procedure can be augmented to cached messages saved while awaiting a complete Authentication Stack.
+		% 	}
+		% \end{algorithm}
 
 		\subsubsection{Modification for Metadata Removal}
 
@@ -530,22 +577,22 @@
 			However, we propose a preferred alternative that saves an MT51 message by having the Hash Path salt derives from the level-2 signature protocol.
 			We propose Provider compute a Hash Path Salt $S^P$ for Equation~\eqref{eq: hash path} via Algorithm~\ref{alg: salt}.
 
-			\begin{algorithm}%\label{alg: salt}
-				\SetAlgoLined
-				{\bf Provider} \\
-				Provider generates cryptographically-secure nonce $K$; \\
-				With elliptic curve base point $G$, Provider computes elliptic curve point $C = K \times G$; \\
-				$S^P = H(C)$; \\
-				Provider computes hash path $p^P_2 ... p^P_{n+1}$ with Equation~\eqref{eq: hash path}; \\
-				Provider generates ECDSA signature for $p^P_{n+1}$ with $C$ and broadcasts before actual use of Hash Path; \\
-				{\bf Receiver} \\
-				Receiver receives $p^P_{n+1}$ with ECDSA signature for authentication; \\
-				Receiver derives $C$ from ECDSA signature; \\
-				$S^P = H(C)$; \\
-				Receiver authenticates new message on a new Hash Path upon receipt of $p^P_n$.
-				\caption{Transmitting Salt $S^P$ without additional message with ECDSA}
-				\label{alg: salt}
-			\end{algorithm}
+			% \begin{algorithm}%\label{alg: salt}
+			% 	\SetAlgoLined
+			% 	{\bf Provider} \\
+			% 	Provider generates cryptographically-secure nonce $K$; \\
+			% 	With elliptic curve base point $G$, Provider computes elliptic curve point $C = K \times G$; \\
+			% 	$S^P = H(C)$; \\
+			% 	Provider computes hash path $p^P_2 ... p^P_{n+1}$ with Equation~\eqref{eq: hash path}; \\
+			% 	Provider generates ECDSA signature for $p^P_{n+1}$ with $C$ and broadcasts before actual use of Hash Path; \\
+			% 	{\bf Receiver} \\
+			% 	Receiver receives $p^P_{n+1}$ with ECDSA signature for authentication; \\
+			% 	Receiver derives $C$ from ECDSA signature; \\
+			% 	$S^P = H(C)$; \\
+			% 	Receiver authenticates new message on a new Hash Path upon receipt of $p^P_n$.
+			% 	\caption{Transmitting Salt $S^P$ without additional message with ECDSA}
+			% 	\label{alg: salt}
+			% \end{algorithm}
 
 			With every ECDSA signature, Provider computes a cryptographically secure nonce.
 			With Algorithm~\ref{alg: salt}, the salt derives from a public quantity derived from this nonce.
@@ -950,7 +997,10 @@
 	Moreover, since the scheme makes use of space within the I-channel, no use of the Q-channel (and the associated power decrease and loss of service at service volume boundaries) is required.
 	Therefore, we find this scheme, or something substantially similar, is acceptable for SBAS authentication.
 
-\bibliographystyle{ieeetr}
+\section*{Acknowledgments}
+
+We gratefully acknowledge the support of the FAA Satellite Navigation Team for funding this work under Memorandum of Agreement \#: 693KA8-19-N-00015.
+
 \bibliography{references}
 
 \end{document}

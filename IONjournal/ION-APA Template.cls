@@ -2708,7 +2708,7 @@ Volume\ \@jvol, Article ID\ \@artid, \thepage~pages\par%
 \else%
 \if@APArefstyle
    \let\doiprefix\empty
-   \usepackage[natbibapa]{NJDapacite}%NJDapacite}%
+   \usepackage[natbibapa]{IONjournal/NJDapacite}%NJDapacite}%
    \bibliographystyle{apacite}%WileyNJD-APA}%
    \renewcommand{\APACaddressPublisher}[2]{\ifx\@empty#2\@empty\else{#2}\fi%                 publisher
     }
