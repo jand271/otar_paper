@@ -945,10 +945,10 @@
 	Implementing these features is left to future work after feedback from the SBAS stakeholders on this work.
 
 	With MAAST, we modified the message scheduler to (1) send MT50s at a cadence of one in six messages and (2) send MT51s whenever the schedule allowed an opening.
+	For this work, MAAST implemented the Authenticate-Then-Use (``ATU'') framework for the receiver\cite{walter2021sbas}.
 	Given the current use of the SBAS message schedule, MT51s were sent more frequently than the requirement specified above at one in seventeen messages.
-	Therefore, among our simulations, TFAF occurred usually within one minute, and if not, just outside one minute.
+	Therefore, among our simulations, TFAF occurred within two minutes, rather than the required five minutes.
 	The TFAF is less than our requirement from Section~\ref{sub:mt51_schedule_frequency} because the simulated Provider sent the 16 unique messages within open slots of the SBAS schedule.
-	The following changes were made to the flight algorithms \cite{}.
 	Therefore, our simulation indicates that SBAS availability and continuity are not affected by this authentication scheme.
 	Figure~\ref{fig:results} provides availability maps comparing two cases (1) no authentication and (2) faithful authentication via MT50 and MT51 with message information accepted only after authentication.
 	Within Figure~\ref{fig:results}, the availability map is slightly different, noticeable at the service volume boundaries over Alaska and Canada; however, given the reasonable fidelity of MAAST, we consider the results indistinguishable.
@@ -977,9 +977,10 @@
 \section{Conclusion} \label{sec:conclusion}
 
 	This works delineates a complete TESLA-based SBAS authentication scheme that includes OTAR.
+	The scheme relies on three levels of security: (1) 128-bit-security TESLA, (2) 128-bit-security ECDSA, and (3) 256-bit-security ECDSA. 
 	The scheme merely appends two message types to the schedule, meaning it does not require removing power from the I-channel to support a Q-channel strategy.
 	It is immediately backward compatible because older receivers can ignore the new message types and it is flexible and expandable according to the needs and additional feedback from SBAS Stakeholders.
-	The flexibility of the scheme derives from this works suggestion to craft a single message for all cryptographic maintenance.
+	The flexibility of the scheme derives from this work's suggestion to craft a single message for all cryptographic maintenance.
 	Given the reasonable use of onboard clocks, external clocks, and maintenance patterns, we assert the existence of reasonable, nuanced strategies to mitigate attacks against the lose time-synchronized assumption required by TESLA.
 
 	We test the scheme with a faithful, full-stack simulation that includes full encoding and decoding of messages and use of a proper cryptographic library.
