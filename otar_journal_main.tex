@@ -71,6 +71,7 @@
 	In this work, we delineate a complete Satellite-Based Augmentation System (the service itself, ``SBAS'') authentication scheme, including over-the-air re-keying (``OTAR'') and then discuss how this proposed scheme meets necessary security levels and desirable traits to SBAS stakeholders, such as backward compatibility, data efficiency, and quick time of first authenticated fix (``TFAF'').
 	Moreover, it is expandable to additional stakeholder feedback.
 	This work addresses the complete authentication scheme design, including connecting receiver hardware requirements to maintenance schedules, key updates, and scheme maintenance, and uses a full-stack Monte-Carlo SBAS simulation to test and evaluate the scheme's performance.
+	This work builds and an expands upon our work presented in \cite{Anderson2021}, including updating security details, updating definitions based upon some SBAS Stakeholder feedback, and including additional results.
 
 	Satellite-Based Augmentation Systems (the several international systems together, ``SBASs''), such as the United States' Wide-Area Augmentation System (``WAAS'') among other international equivalents, have become integral to the Global Navigation Satellite System (``GNSS'') for civilian aviation use.
 	International parties that choose to implement an SBAS (each a ``Provider'') use listening stations around their service volume to assess GNSS satellite positioning data and then broadcast corrections widely via geostationary satellites.
@@ -109,7 +110,7 @@
 	Some prior art has explored how TESLA and ECDSA computations would fare with use in the GNSS, SBAS, and smartphone context \citep{tesla-cpus}.
 	TESLA often requires a more intense, one-time startup hashing computation upon receiver start and minimal hashing operations during standard operation.
 	We note that modern commodity electronics perform these operations often and often include hardware-specific acceleration in their chips to increase computational efficiency and allow parallelism.
-	Therefore, we expect that if these methods burden current receivers, receiver manufacturers could augment their chips at a minimal cost to maintain desirable computational loads.
+	Therefore, we expect that if these methods burden current receivers, manufacturers could augment their chips at a minimal cost to maintain desirable computational loads.
 
 	Prior art suggested appending a single message type (``MT'') to SBAS for authentication and its maintenance\citep{Neish_Dissertation}.
 	It suggests that SBAS sends this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and 26-bits for the scheme's maintenance.
@@ -149,13 +150,6 @@
 
 	\subsection{TESLA} \label{sub:tesla}
 
-		TESLA is an authentication protocol that allows a receiver to authenticate messages from Provider when used in tandem with other asymmetric authentication protocols.
-		This protocol poses several advantages over a purely asymmetric system relevant to GNSS and SBAS systems.
-		First, the protocol requires less authenticating psuedorandom data to authenticate messages from Provider.
-		Second, the protocol is loss-tolerant.
-		Third, the receiver authentication computation is less strenuous.
-		Figure~\ref{fig: TESLA Diagram} provides a conceptual diagram of the TESLA description that follows.
-		Algorithms~\ref{alg: TESLA provider} and~\ref{alg: TESLA receiver} describe the protocol more concretely.
 		\begin{figure}%\label{fig: TESLA Diagram}
 			\centering
 			\includegraphics[width=\linewidth]{fig/TESLADiagram.pdf}
@@ -167,6 +161,14 @@
 			}
 			\label{fig: TESLA Diagram}
 		\end{figure}
+
+		TESLA is an authentication protocol that allows a receiver to authenticate messages from Provider when used in tandem with other asymmetric authentication protocols.
+		This protocol poses several advantages over a purely asymmetric system relevant to GNSS and SBAS systems.
+		First, the protocol requires less authenticating psuedorandom data to authenticate messages from Provider.
+		Second, the protocol is loss-tolerant.
+		Third, the receiver authentication computation is less strenuous.
+		Figure~\ref{fig: TESLA Diagram} provides a conceptual diagram of the TESLA description that follows.
+		Algorithms~\ref{alg: TESLA provider} and~\ref{alg: TESLA receiver} describe the protocol more concretely.
 
 		TESLA uses only a single cryptographic primitive: a cryptographically secure hash function.
 		In this proposal, we select a salted SHA-256, truncated to the left-most 128-bits (herein, the ``Hash Function'' or $\textrm{H}(\cdot)$), so we describe the TESLA protocol concretely using our selection without loss of generality.
@@ -316,7 +318,6 @@
 		We refrain from specifying which features should be incorporated, deferring until all SBAS stakeholders have had their considerations heard.
 		Section~\ref{sub:metadata_design} discusses how to modify the 128-84-bit allocation if SBAS stakeholders do not care for the additional features described later.
 		In the academic context of this work, since our design meets the KPIs, we choose to publish this 128-bit feature rich design.
-		
 		Tables~\ref{tab: mt51-b}~and~\ref{tab: meta-data} together provide our proposed definition of MT51 with bit allocations.
 		Provider must broadcast MT51 messages approximately every 1 in 18 messages for MT51, see Section~\ref{sub:mt51_schedule_frequency}.
 		These messages do not have to be sent on a rigid schedule and can be sent in the extra space within the current SBAS schedule.
@@ -373,7 +374,7 @@
 		fourth, the expiration time of the Germane Key;
 		fifth, a 16-bit hash of the entire authenticating key so that the receiver can immediately associate the authenticating psuedorandom data OTAR Payload Segment with a specific authenticating key;
 		sixth, whether the payload itself is a key or authentication signature;
-		seventh, the segment number of the authenticating psuedorandom data so that the receiver can piece together all the authenticating psuedorandom data segments over time.
+		seventh, the segment number of the authenticating psuedorandom data so that the receiver can aggregate the authenticating psuedorandom data segments over time.
 
 		\begin{table}%\label{tab: mt51-set}
 			\center
@@ -409,7 +410,6 @@
 
 		Algorithm~\ref{alg: TESLA provider} describes the procedure for Providers to used TESLA securely.
 		In addition, Providers must assemble OTAR data by coordinating with CA according to Section~\ref{sub:ecdsa_key_structure}.
-
 		Algorithm~\ref{alg: TESLA receiver} captures how a receiver should operate starting from a cold start, including specifying some of the onboard data structures that should be used to track key maintenance.
 		Upon cold start, a receiver must listen to and record incoming SBAS messages.
 		A receiver should not use any unauthenticated data (noting that the complete set of MT51s is self-authenticating).
@@ -454,7 +454,6 @@
 			\end{algorithmic}
 			For continuous operation, compute and broadcast the next Hash Path End $p^{P+1}_{n+1}$, signed by a Level-2 ECDSA key and distributed via MT51, among the groups of sent messages $m_1 \cdots m_5$
 		\end{algorithm}
-
 		\begin{algorithm}%\label{alg: TESLA receiver}
 			\caption{Receiver Procedures for Single Satellite, Single Frequency Authenticated Message Distribution with TESLA.}
 			\label{alg: TESLA receiver}
@@ -585,9 +584,9 @@
 			\end{algorithm}
 
 			With every ECDSA signature, Provider computes a cryptographically secure nonce.
-			With Algorithm~\ref{alg: salt}, the salt derives from a public quantity derived from this nonce.
-			For ECDSA, this is the curve point $C$, and there is an equivalent number in EC-Schnorr signatures, usually called $r$.
-			This $C$ is cryptographically secure random since it derives from the cryptographically-secure nonce generated at signing; using it as the Hash Path salt compromises neither the signing key nor the Hash Path and saves an MT51 OTAR message.
+			With Algorithm~\ref{alg: salt}, the salt derives from a public quantity derived from a nonce.
+			For ECDSA, this is the curve point $C$ (the analogous number in EC-Schnorr signatures is usually called $r$).
+			This $C$ is cryptographically secure random since it derives from the cryptographically-secure nonce generated at signing; using it as the Hash Path salt saves an MT51 message without compromising the signing key or the Hash Path.
 
 			While this scheme poses the advantage of one less message to OTAR, it hinders the scheme's flexibility.
 			Using a nonce more than once reveals the secret private key used to authenticate the data.
@@ -612,7 +611,7 @@
 			To break the TESLA protocol's security, an attacker must hack the receiver time to be 6 seconds behind Provider time.
 			In Equations~\eqref{eq: hash path} and~\eqref{eq: key}, we proposed including the times $t_i$ and $t_j$ in the TESLA counter and Hash-Point-to-HMAC-key derivations.
 			As proposed, if Provider and the receiver are not time-synchronized within 1-second, the authentication scheme fails to certify messages as authenticated since all the keys are derived from the integer time in seconds.
-			This helps make SBAS message spoofing more complex by requiring that any SBAS spoofer also spoof the GNSS time.
+			This makes SBAS message spoofing more complex since any SBAS spoofer must also spoof the GNSS time.
 
 			While in standard operation, Provider will send an MT50 every six seconds.
 			However, the SBAS alert requirements specify that, upon an alert, alert messages must be sent immediately for four consecutive seconds.
@@ -641,8 +640,8 @@
 			To limit the information lost, any delayed MT50 should sign the original messages corresponding to the loosely synchronized schedule.
 			Concretely, in Figure~\ref{fig: alert schedule} in the row labeled Alert 6, (1) the MT50 of column 160 must sign the messages of columns 151 through 155, (2) the MT 50 of column 162 must sign the messages of columns 157 through 161, and (3) the non-MT50 message of column 156 remain unauthenticated.
 			For the rows labeled alerts 3 through 6, the integrity messages of column 156 each remain unauthenticated.
-			This is acceptable because those messages will only tell receivers not to use the service, and the surrounding integrity messages will be authenticated anyway.
-			Without this requirement, some messages of substance will not be authenticated.
+			This is acceptable because those messages tell receivers not to use the service, and the surrounding integrity messages will be authenticated anyway.
+			Without this requirement, messages of substance will not be authenticated.
 
 	\subsection{TESLA Security} \label{sub:tesla_security}
 
@@ -782,12 +781,10 @@
 		We note that the 128-bit MT51 design, remarkably, allows receiver to not presume anything about the OTAR schedule or use.
 		In our simulation, the receiver implementation knows nothing of the 100, 10, and 1 week cadence, nor whether the keys are rigidly or linearly managed.
 
-		For 192-bit OTAR Payload Segment length almost maintains the integer-division property.
+		An 192-bit OTAR Payload Segment length almost maintains the integer-division property.
 		An Authentication Stack from Table~\ref{tab: psuedorandom lengths} using AES-256 to encrypt level-1 keys and having a separate TESLA salt MT51 would be integer-divisible by 192 with 2304 total bits and 12 192-bit MT51s.
-
-		Alternatively, as features are removed, rather than shifting bit allocations from the metadata to OTAR Payload Segment, SBAS Providers could instead replace metadata bits with fountain codes.
+		Alternatively, as features are removed, rather than shifting bit allocations from the metadata to OTAR Payload Segment, SBAS Providers could instead replace metadata bits with fountain codes arbitrarily.
 		This suggestion would (1) maintain the MT51's integer-division property on the authenticating psuedorandom data ensuring there is no wasted zero-padding on the delivered data, and (2) add loss-tolerant properties of MT51.
-		Fountain codes can arbitrarily occupy spare bits.
 		
 		We implore the SBAS Stakeholders to have a future-proofing mindset to allow for considerations that may be needed decades in the future.
 		Cryptographic primitives will break and need to be replaced; Quantum-computer resistant algorithms may be needed.
@@ -824,7 +821,7 @@
 				Metadata, etc & HMAC1 & HMAC2 & HMAC3 & HMAC4 & HMAC5 & HMAC6 & HMAC7 & HMAC8 & CRC \\ \hline
 				98 & 16 & 16 & 16 & 16& 16 & 16 & 16 & 16 & 24 \\ \hline
 			\end{tabular}
-			\caption{Bit allocation proposed for a particular MT 51 to authenticate the entire set of ephemerides at 250 bits per message with 128-bit payload.}
+			\caption{Bit allocation for a particular MT 51 to authenticate a subset of ephemerides with a 128-bit payload.}
 			\label{tab: nma}
 		\end{table}
 
