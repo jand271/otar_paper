@@ -95,23 +95,23 @@
 	Herein, wherever we specify ECDSA, we could use another similar asymmetric cryptographic algorithm (e.g., EC-Schnorr); however, we will specify ECDSA without losing generality for concreteness, noting that certain parameters and characteristic security strengths listed here would be different if not using ECDSA.
 	A single ECDSA signature requires 512-bits to achieve the standard 128-bit security level with ECDSA, which dwarfs the 216 data bits allowed per SBAS message.
 
-	Some prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating psuedorandom data \cite{todd-pki-scheme, other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
+	Some prior art has suggested using the Quadrature (``Q'') channel to deliver the authenticating psuedorandom data \citep{todd-pki-scheme, other_schemes}; however, those solutions would require power from the current use of the In-phase (``I'') channel.
 	Using the Q channel would strain the availability and continuity of SBAS systems at coverage area boundaries, which is undesirable to SBAS stakeholders.
-	Some prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \cite{Neish_Dissertation, gal-os-tesla} since it provides more efficient use of authenticating psuedorandom data and is loss-tolerant.
-	TESLA uses a delayed-release mechanism to authenticate data with less authenticating psuedorandom data than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \cite{perrig2005timed}.
+	Some prior art has suggested using a combination of ECDSA with another algorithm called Timed Efficient Stream Loss Tolerant Authentication (``TESLA'') \citep{Neish_Dissertation, gal-os-tesla} since it provides more efficient use of authenticating psuedorandom data and is loss-tolerant.
+	TESLA uses a delayed-release mechanism to authenticate data with less authenticating psuedorandom data than that required by ECDSA; however, it requires that Provider and a user be loosely time-synchronized \citep{perrig2005timed}.
 	SBAS cannot exclusively use TESLA: TESLA must be used in tandem with ECDSA to achieve authentication security.
 	In this work, we establish the following relationship between the proposed TESLA-ECDSA scheme: TESLA authenticates the SBAS messages themselves, and ECDSA authenticates SBAS's use of TESLA as periodic {\em maintenance}.
 	The prior art has specified that TESLA and ECDSA scheme parameters required to achieve authentication; however, it has largely not addressed the maintenance and maintenance requirements, such as how best to perform OTAR.
 	This work addresses the main challenge by suggesting a more efficient authentication maintenance scheme without using the Q channel.
-	Moreover, this work leverages specific features of TESLA scheme to assert security efficiently \cite{chain-security} and allows additional features relevant to SBAS stakeholders.
+	Moreover, this work leverages specific features of TESLA scheme to assert security efficiently \citep{chain-security} and allows additional features relevant to SBAS stakeholders.
 
 	Another challenge lies with receiver computational considerations.
-	Some prior art has explored how TESLA and ECDSA computations would fare with use in the GNSS, SBAS, and smartphone context \cite{tesla-cpus}.
+	Some prior art has explored how TESLA and ECDSA computations would fare with use in the GNSS, SBAS, and smartphone context \citep{tesla-cpus}.
 	TESLA often requires a more intense, one-time startup hashing computation upon receiver start and minimal hashing operations during standard operation.
 	We note that modern commodity electronics perform these operations often and often include hardware-specific acceleration in their chips to increase computational efficiency and allow parallelism.
 	Therefore, we expect that if these methods burden current receivers, receiver manufacturers could augment their chips at a minimal cost to maintain desirable computational loads.
 
-	Prior art suggested appending a single message type (``MT'') to SBAS for authentication and its maintenance\cite{Neish_Dissertation}.
+	Prior art suggested appending a single message type (``MT'') to SBAS for authentication and its maintenance\citep{Neish_Dissertation}.
 	It suggests that SBAS sends this MT every six messages and that this MT delivers 190-bits of TESLA authentication data and 26-bits for the scheme's maintenance.
 	While the scheme requires a steep authentication-message delivery frequency, it does not overburden the SBAS MT schedule.
 	We modify this work by appending another MT to SBAS to replace the 26-bits mentioned above dedicated for maintenance.
@@ -120,7 +120,7 @@
 	It is agnostic to the ECDSA and TESLA scheme parameters; therefore, it requires minimal changes in the event of cryptographic primitive breakage.
 	Moreover, it scales well with increases to the security level requirements and is flexible and future-proof to anticipated feedback from Providers and SBAS stakeholders.
 
-	To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called Matlab Algorithm Availability Simulation Tool (``MAAST'')\cite{MAAST}.
+	To evaluate the proposed method against prior art, we implement a full-stack SBAS simulation of our design by augmenting an existing SBAS simulation tool called Matlab Algorithm Availability Simulation Tool (``MAAST'')\citep{MAAST}.
 	MAAST has been used to evaluate SBAS design before and provides Monte-Carlo simulation results to evaluate how our design performs under message loss over the WAAS coverage area.
 	The tool shows that our proposed design outperforms Key Performance Indicators (each a ``KPI''), such as TFAF, time to authentication per message, and robustness to message loss.
 
@@ -128,14 +128,14 @@
 	Therefore, our scheme must also describe its resistance to a Replay Attack.
 	A Replay Attack is where a spoofer listens and then replays messages at a slightly delayed rate.
 	After some time, the spoofer-induced time delay allows the spoofer to violate the loosely-time synchronized assumption and break the TESLA scheme.
-	There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\cite{Psiaki2016,Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
-	Some prior art has described how an onboard receiver clock could be used to detect such an attack, given clock uncertainty\cite{time_sync_paper}.
+	There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\citep{Psiaki2016,Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
+	Some prior art has described how an onboard receiver clock could be used to detect such an attack, given clock uncertainty\citep{time_sync_paper}.
 	This work extends that work of prior art by discussing how onboard clocks, external clocks, and maintenance conditions can be used to mitigate Replay Attack threats.
 
 	\subsection{ECDSA} \label{sub:ecdsa}
 
 		ECDSA is a standardized asymmetric authentication protocol.
-		There are details not mentioned in the following summary description of ECDSA, so for a more precise definition, we refer the reader to widely available detailed definitions in cryptographic literature or the internet~\cite{boneh2017graduate}.
+		There are details not mentioned in the following summary description of ECDSA, so for a more precise definition, we refer the reader to widely available detailed definitions in cryptographic literature or the internet~\citep{boneh2017graduate}.
 		The protocol specifies a signing function and a verifying function.
 		Let $n$ be the security level of an instance of the protocol, which linearly describes the required computation to {\em exhaustively} break the instance.
 		Provider generates a secure random $2n$-bit integer for long-term use as a secret private key.
@@ -215,7 +215,7 @@
 
 	\subsection{ECDSA Key Structure} \label{sub:ecdsa_key_structure}
 
-		We propose a two-level ECDSA key structure, as suggested \cite{Neish_Dissertation}.
+		We propose a two-level ECDSA key structure, as suggested \citep{Neish_Dissertation}.
 
 		Level-1 keys will be 256-bit-security ECDSA keys managed internationally by a trusted Certificate Authority (``CA'').
 		Each level-1 key will be in use for 100 weeks.
@@ -482,7 +482,7 @@
 							\State $p_t \gets H(p_t, S^P, t_t)$ via Equation~\eqref{eq: hash path}
 						\EndIf
 						\State $i \gets i + 1$
-						Note: caching previously authenticated $p_t$ prevents excessive hashing to Hash Path End each iteration. There is no need to hash down to the Hash Path End more than once.
+						\State Note: caching previously authenticated $p_t$ prevents excessive hashing to Hash Path End each iteration. There is no need to hash down to the Hash Path End more than once.
 					\EndWhile
 					\State Note: after this iteration $m_1 \cdots m_5$ and $m_{12}$ are authenticated. $m_7 \cdots m_{11}$ are authenticated at the next iteration.
 					\State $m_1 \cdots m_5 \gets m_7 \cdots m_{11}$
@@ -516,7 +516,7 @@
 		This property scales along the length of the Hash Path.
 		If a receiver is off longer than the Hash Path's length or applicability, it will need to OTAR the Hash Path End via MT51 and ECDSA.
 
-		Regarding loss tolerance of messages and the security of 16-bit HMACs, we implement the key idea of \cite{Neish_Dissertation}.
+		Regarding loss tolerance of messages and the security of 16-bit HMACs, we implement the key idea of \citep{Neish_Dissertation}.
 		The smaller 16-bit HMAC design of MT50 aids in general message loss tolerance.
 		Suppose, instead, each MT50 contained a single HMAC that authenticated the previous five messages together.
 		If any of the five previous messages were lost, the receiver would not verify any of the five messages.
@@ -531,7 +531,7 @@
 		Increasing the Hash Path length requires Provider to compute a longer Hash Path per OTAR and receivers to hash more in the event of cold start, but this burden is negligible as commodity hardware can compute Hash Paths on the lengths specified in this work in seconds, see Section~\ref{sub:procedures}.
 		Regardless, MT51 can resign Hash Points mid-way through a Hash Path to decrease this burden.
 		For instance, while a Provider could generate week-long Hash Paths, it could sign Hash Path Ends each day or each hour to alleviate the initial hashing operation.
-		At a 128-bit Hash Point length, a Hash Path length on the order of decades is safe from attack \cite{Neish_Dissertation}.
+		At a 128-bit Hash Point length, a Hash Path length on the order of decades is safe from attack \citep{Neish_Dissertation}.
 		Therefore, the OTAR transmission frequency is primarily driven by the desired TFAF, see Section~\ref{sub:mt51_schedule_frequency}.
 
 		To meet a standard 128-bit security level for TESLA, we must use cryptographically independent 128-bit long keys for each HMAC.
@@ -551,7 +551,7 @@
 		\subsubsection{ECDSA-derived Hash Path Salt} \label{subsub:ecdsa_salt}
 
 			The security of each TESLA Hash Path hinges on the difficulty of computing any earlier preimage Hash Point of the Hash Path before Provider releases it.
-			Unsalted Hash Paths are susceptible to precomputation attacks, also known as Rainbow Table Attacks~\cite{boneh2017graduate}.
+			Unsalted Hash Paths are susceptible to precomputation attacks, also known as Rainbow Table Attacks~\citep{boneh2017graduate}.
 			An attacker precomputes a large number of Hash Paths and stores them hoping that one of those precomputed Hash Paths contains the currently secure Hash Point mid Hash Path.
 			If that ever occurs, the attacker then has in-memory Hash Points earlier on the no-longer-secure Hash Path, and can spoof SBAS authenticated messages.
 			To prevent this, we must introduce random variations called salt to the Hash Function that makes a precomputation attack infeasible.
@@ -603,7 +603,7 @@
 			Sending and arrival times, rounded down to the nearest integer, are the same for Provider and receiver, since messages are sent each second and transmission time-of-flight is less than a second.
 			Using the time, instead of the integer number of points from the Hash Path start, provides several advantages.
 			Upon start, a receiver knows how to verify a Hash Point since Equation~\eqref{eq: hash path} is only a function of current integer time and the ECDSA authenticating psuedorandom data.
-			Moreover, it allows the switching of Hash Paths to occur on a non-rigid schedule, which aids with security as well \cite{chain-security}.
+			Moreover, it allows the switching of Hash Paths to occur on a non-rigid schedule, which aids with security as well \citep{chain-security}.
 			While we specify a week interval, and it would be natural to have a new Hash Path begin at the beginning of a GNSS week, Provider need not communicate the start and length of Hash Paths as overhead or metadata for a non-rigid schedule because of the hashing properties of the Hash Point.
 			If Provider were to switch Hash Paths arbitrarily, there is a constant-time complexity for the receiver to check if a new Hash Point hashes to the current Hash Path or a new one, as seen in Algorithm~\ref{alg: TESLA receiver}.
 
@@ -646,7 +646,7 @@
 
 	\subsection{TESLA Security} \label{sub:tesla_security}
 
-		Previous work determined the appropriate security-level lengths under conservative adversary models\cite{Neish_Dissertation}.
+		Previous work determined the appropriate security-level lengths under conservative adversary models\citep{Neish_Dissertation}.
 		That work asserts that a TESLA Hash Point length of 115-bits and an HMAC length of 15-bits is sufficient to deter a supercomputer level attack over the time-between-authentication interval and assert a sufficiently low probability of success.
 		In this work, we round these numbers up to the nearest base-2 number, 128 and 16, respectively.
 		Increasing these lengths adds additional security-level padding.
@@ -759,7 +759,7 @@
 
 		There are many features that the scheme's modularity can accommodate; however, if SBAS stakeholders do not want any of these features, then the spare meta bits could also be used to aid in resistance to message loss.
 		Providers could add redundant HMACS to the MT51 message to redundantly authenticate messages to alleviate MT50 message loss.
-		Moreover, the delivery of 128-bits of authenticating psuedorandom data could be augmented with fountain codes \cite{gnss_fountain_codes}.
+		Moreover, the delivery of 128-bits of authenticating psuedorandom data could be augmented with fountain codes \citep{gnss_fountain_codes}.
 		Fountain Codes (1) increase the reliability of delivering MT51 messages and (2) decrease the number of transmitted messages required for an authenticated first fix.
 		The selection of 128-bits aids in the scheme's efficiency since all the data is integrally divisible by 128.
 		Special care can ensure that using fountain codes in the spare bits to augment those 128-bits would not change the integrally divisible property and maintain efficiency.
@@ -901,7 +901,7 @@
 	Loosely time-synchronized means that the receiver has a sufficient, externally-trusted time to reject HMACS after the release of the associated Hash Point.
 	This poses a catch-22 to aircraft that use an isolated GNSS receiver since GNSS provides the time.
 	GNSS ranging signals allow receivers to derive an accurate, atomic-clock-synchronized time which is certainly accurate enough to support the delay-release schedule.
-	There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\cite{Psiaki2016, Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
+	There are ways from the prior art by which receivers can establish trust in GNSS ranging signals\citep{Psiaki2016, Fernandez-Hernandez2018}; however, GNSS ranging signals are not yet rigorously authenticated with cryptography.
 
 	To break SBAS security by breaking the loosely time-synchronized assumption, an adversary must spoof the receiver time by delaying the receiver time.
 	In our case, this delay is six seconds.
@@ -912,7 +912,7 @@
 	There are several mitigation strategies to mitigate the creeping Replay Attack.
 
 	The first is to use its onboard clock to evaluate a spoofed-time hypothesis.
-	The prior art has explored how to use clock tolerances to generate and use tolerance bounds to assert clock trust\cite{time_sync_paper}.
+	The prior art has explored how to use clock tolerances to generate and use tolerance bounds to assert clock trust\citep{time_sync_paper}.
 	We have explored a few methodologies to fuse GNSS and onboard clock to evaluate whether a receiver is actively in a creeping Replay Attack, such as Pearson hypothesis tests and Kalman-filter-based hypotheses tests.
 	The explicit hypothesis methodologies and their evaluation are left for other work.
 	These strategies can detect a creeping Replay Attack before the six-second breakage boundary, provided the creeping delay rate is faster than the uncertainty bound of the onboard clock.
@@ -928,7 +928,7 @@
 	A receiver could compare its own time to an internet-based time or a cellular-based time.
 	This comparison need only bound the GNSS-based time: the receiver can still utilize the accurate time derived from the GNSS positioning regression time, but check that it matches the internet-based time within a bound such as one second.
 	This internet or a data-based time can be rigorously authenticated with cryptographic authentication according to the standard of the medium.
-	The original TESLA protocol provides a secure time-synchronization procedure: Provider would establish an internet server to accept and operate on receiver-generated nonces that would work within the secure Hash Path\cite{perrig2005timed}.
+	The original TESLA protocol provides a secure time-synchronization procedure: Provider would establish an internet server to accept and operate on receiver-generated nonces that would work within the secure Hash Path\citep{perrig2005timed}.
 	Our choice to use the word {\em compare} is intentional to address the concern about allowing external inputs regarding time into the isolated SBAS receiver.
 	This comparison is achievable without exposing the receiver's time to hacking strategies.
 	Other strategies would also alert the pilot that the SBAS time is not trusted, such as incorporating the GNSS time estimate into the Air Traffic Control Radar Beacon System.
@@ -945,7 +945,7 @@
 	Implementing these features is left to future work after feedback from the SBAS stakeholders on this work.
 
 	With MAAST, we modified the message scheduler to (1) send MT50s at a cadence of one in six messages and (2) send MT51s whenever the schedule allowed an opening.
-	For this work, MAAST implemented the Authenticate-Then-Use (``ATU'') framework for the receiver\cite{walter2021sbas}.
+	For this work, MAAST implemented the Authenticate-Then-Use (``ATU'') framework for the receiver\citep{walter2021sbas}.
 	Given the current use of the SBAS message schedule, MT51s were sent more frequently than the requirement specified above at one in seventeen messages.
 	Therefore, among our simulations, TFAF occurred within two minutes, rather than the required five minutes.
 	The TFAF is less than our requirement from Section~\ref{sub:mt51_schedule_frequency} because the simulated Provider sent the 16 unique messages within open slots of the SBAS schedule.
